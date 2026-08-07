@@ -8,19 +8,13 @@ Rechne mit ca. 20–30 Minuten, alles kostenlos (Neon Free Tier + Vercel Free Ti
 
 ## Schritt 0: Auf GitHub pushen
 
-Öffne ein Terminal im Ordner `dashboard` (Rechtsklick im Explorer → "Terminal öffnen", oder in VS Code).
+Das Repo `skuvert/Skuvert-Dashboard` existiert schon (leer) und ist als `origin` lokal eingetragen. Es fehlt nur noch der Push — das kann ich nicht selbst auslösen (von Claude Code aus grundsätzlich blockiert), also einmal manuell im Terminal (Ordner `dashboard`):
 
 ```bash
-gh repo create skuvert-dashboard --private --source=. --remote=origin --push
+git push -u origin master
 ```
 
-Das legt ein **privates** Repo namens `skuvert-dashboard` in deinem GitHub-Account (`skuvert`) an und pusht den fertigen Code hinein. Danach siehst du es unter `https://github.com/skuvert/skuvert-dashboard`.
-
-> Kein `gh` zur Hand oder Fehler? Alternativ auf [github.com](https://github.com/new) manuell ein neues, **leeres** Repo `skuvert-dashboard` anlegen (kein README/.gitignore ankreuzen), dann:
-> ```bash
-> git remote add origin https://github.com/skuvert/skuvert-dashboard.git
-> git push -u origin master
-> ```
+Danach ist der Code unter `https://github.com/skuvert/Skuvert-Dashboard` sichtbar.
 
 ---
 
