@@ -18,58 +18,19 @@ Danach ist der Code unter `https://github.com/skuvert/Skuvert-Dashboard` sichtba
 
 ---
 
-## Schritt 1: Neon-Datenbank anlegen (kostenlos)
+## Schritt 1–3: Neon-Datenbank, Konfiguration, lokaler Test — ✅ bereits erledigt
 
-1. Gehe zu **[neon.com](https://neon.com)** → **"Sign up"** → mit GitHub anmelden (derselbe `skuvert`-Account geht am einfachsten).
-2. **"Create a project"** klicken. Name z. B. `skuvert-dashboard`, Region **Frankfurt (eu-central-1)** — am nächsten an der Schweiz.
-3. Nach dem Erstellen landest du auf der Projektseite. Dort auf **"Connect"** (oder "Connection Details").
-4. Wichtig: Toggle **"Pooled connection"** aktivieren, falls vorhanden — das ist die Verbindung, die mit Vercel funktioniert.
-5. Den kompletten Connection-String kopieren. Er sieht so aus:
-   ```
-   postgresql://neondb_owner:xxxxx@ep-xxxxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require
-   ```
-   → in eine Notiz/Editor zwischenspeichern, du brauchst ihn gleich zweimal (lokal + Vercel).
+Du hast den Connection-String geschickt, den Rest habe ich übernommen:
 
----
+- `.env` ausgefüllt (liegt lokal, nicht auf GitHub)
+- `npx prisma migrate deploy` — alle Tabellen angelegt
+- `npm run db:seed` — Hilfsmittel-Preistabellen befüllt (10 Post-Preiszeilen, 7 eigene Preiszeilen)
+- Echter End-to-End-Test gegen deine Neon-Datenbank: Login-Cookie geprüft, `/`, `/tools`, `/orders/new` laufen fehlerfrei, `/tools` zeigt die echten Seed-Daten, ein Test-Auftrag inkl. automatischer Checkliste wurde angelegt, über den Tracking-Token gefunden und wieder gelöscht.
+- Dabei einen echten Bug gefunden und behoben: `npm run db:seed` hat `.env` bisher nicht geladen (nur der reguläre Prisma-Migrationsweg tat das) — jetzt gefixt und committet.
 
-## Schritt 2: Projekt lokal fertig konfigurieren
+Ich habe dir ein zufälliges **Admin-Passwort** generiert und in deine lokale `.env` eingetragen (steht im Chat, nicht hier — diese Datei landet auf GitHub, auch wenn das Repo privat ist, Secrets gehören da grundsätzlich nicht rein). Am besten in einem Passwort-Manager sichern — du brauchst es gleich nochmal für Vercel (Schritt 4) und danach für jeden Login.
 
-Im Ordner `dashboard` die Datei **`.env`** öffnen (existiert schon, mit leeren Werten) und ausfüllen:
-
-```env
-DATABASE_URL="<dein Connection-String aus Schritt 1>"
-ADMIN_PASSWORD="<ein Passwort deiner Wahl>"
-```
-
-`ADMIN_PASSWORD` ist das einzige Passwort für den Admin-Bereich — frei wählbar, nur du kennst es.
-
-Danach im Terminal (im `dashboard`-Ordner):
-
-```bash
-npx prisma migrate deploy
-npm run db:seed
-```
-
-- `migrate deploy` legt alle Tabellen in deiner Neon-Datenbank an.
-- `db:seed` befüllt die Hilfsmittel-Preistabellen (`/tools`) mit Beispielzeilen, die du danach direkt anpassen kannst.
-
----
-
-## Schritt 3: Lokal testen
-
-```bash
-npm run dev
-```
-
-Öffne **[http://localhost:3000](http://localhost:3000)**:
-
-1. Du wirst zu `/login` weitergeleitet → dein `ADMIN_PASSWORD` eingeben.
-2. **"+ Neue Anfrage"** → Testtext einfügen, z. B. `Hallo, ich hätte gerne SKV-2026-001, Testfigur in PLA. Gruss Anna` → Auftragsnummer wird automatisch erkannt.
-3. Kundenname ausfüllen → **"Auftrag erstellen"**. Du landest auf der Detailseite.
-4. Checkliste, Notizen, E-Mail-Generator kurz ausprobieren.
-5. Den **Kunden-Tracking-Link** von der Detailseite kopieren und in einem privaten/Inkognito-Fenster öffnen — dort siehst du, was der Kunde sieht (kein Login nötig).
-
-Läuft alles? Dann `Strg+C` im Terminal zum Stoppen, weiter zu Schritt 4.
+Wenn du selbst nochmal lokal testen willst: `npm run dev`, dann [localhost:3000](http://localhost:3000) öffnen, mit dem Passwort einloggen.
 
 ---
 
@@ -80,8 +41,8 @@ Läuft alles? Dann `Strg+C` im Terminal zum Stoppen, weiter zu Schritt 4.
 3. Bei "Import Git Repository" das Repo **`skuvert-dashboard`** auswählen → **"Import"**.
 4. Framework wird automatisch als **Next.js** erkannt — nichts ändern.
 5. Bei **"Environment Variables"** zwei Einträge hinzufügen (Name / Value):
-   - `DATABASE_URL` → derselbe Neon-Connection-String wie in Schritt 1
-   - `ADMIN_PASSWORD` → dein Passwort (kann dasselbe wie lokal sein oder ein neues)
+   - `DATABASE_URL` → derselbe Neon-Connection-String, den du mir geschickt hast (steht auch in deiner lokalen `.env`)
+   - `ADMIN_PASSWORD` → derselbe Wert wie in deiner lokalen `.env` (oder ein eigenes neues Passwort, dann aber auch lokal in `.env` anpassen)
 6. **"Deploy"** klicken. Dauert 1–2 Minuten. Vercel installiert die Pakete, erstellt den Prisma-Client, führt automatisch offene Migrationen aus (`vercel-build`-Skript) und baut die Seite.
 7. Nach Abschluss zeigt Vercel dir die Live-URL, z. B. `https://skuvert-dashboard.vercel.app`. Öffnen, mit `ADMIN_PASSWORD` einloggen — fertig, das Dashboard ist live.
 
