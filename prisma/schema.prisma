@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InternalStatus {
+  NEU
+  ANGEBOT_ERSTELLT
+  ANGEBOT_VERSENDET
+  BESTAETIGT_BEZAHLT
+  IN_PRODUKTION
+  FERTIG
+  VERSENDET
+  ABGESCHLOSSEN
+  STORNIERT
+}
+
+enum CustomerStatus {
+  ANFRAGE_ERHALTEN
+  ANGEBOT_GESENDET
+  IN_PRODUKTION
+  VERSANDBEREIT
+  VERSENDET
+  ABGESCHLOSSEN
+}
+
+model Order {
+  id             String   @id @default(cuid())
+  orderNumber    String   @unique
+  customerName   String
+  customerEmail  String
+  rawRequestText String
+  orderTypes     String[]
+
+  internalStatus InternalStatus @default(NEU)
+  customerStatus CustomerStatus @default(ANFRAGE_ERHALTEN)
+
+  trackingToken String  @unique
+  paymentLink   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notes          Note[]
+  costItems      CostItem[]
+  checklistItems ChecklistItem[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model CostItem {
+  id        String @id @default(cuid())
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  label     String
+  qty       Float  @default(1)
+  unitPrice Float
+  sortOrder Int    @default(0)
+}
+
+model ChecklistItem {
+  id        String    @id @default(cuid())
+  orderId   String
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  label     String
+  isDefault Boolean   @default(false)
+  isChecked Boolean   @default(false)
+  checkedAt DateTime?
+  sortOrder Int       @default(0)
+}
+
+model PostPriceRow {
+  id              String @id @default(cuid())
+  weightClass     String
+  destinationZone String
+  price           Float
+  sortOrder       Int    @default(0)
+}
+
+model OwnPriceRow {
+  id        String  @id @default(cuid())
+  label     String
+  unit      String
+  price     Float
+  note      String?
+  sortOrder Int     @default(0)
+}
