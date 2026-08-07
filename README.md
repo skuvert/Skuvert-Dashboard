@@ -18,10 +18,9 @@ Internes Auftrags-Dashboard für [Skuvert, Custom 3D Service](https://skuvert.gi
 
 ```bash
 npm install
-cp .env.example .env
 ```
 
-`.env` ausfüllen:
+`.env` (liegt schon im Projektordner, siehe `.env.example` für die Vorlage) ausfüllen:
 
 ```
 DATABASE_URL="<deine Neon Connection-String>"
@@ -53,22 +52,22 @@ npm run dev
 2. Unter **Environment Variables** setzen:
    - `DATABASE_URL` — dieselbe Neon-Connection-String wie lokal (oder eine separate Produktions-DB, falls gewünscht).
    - `ADMIN_PASSWORD` — dein Passwort.
-3. Deployen. Vercel führt `npm install` aus, was via `postinstall`-Skript automatisch `prisma generate` auslöst.
-4. **Einmalig nach dem ersten Deploy** (falls noch nicht lokal gegen dieselbe DB gemacht): Migration gegen die Produktions-DB laufen lassen — lokal mit der Produktions-`DATABASE_URL` in `.env`:
-   ```bash
-   npx prisma migrate deploy
-   npm run db:seed
-   ```
+3. Deployen. Der Build-Befehl ist `vercel-build` (`prisma migrate deploy && next build`) — Vercel führt also bei jedem Deploy automatisch offene Migrationen aus, du musst das nicht manuell tun.
+4. **Einmalig** die Beispieldaten für `/tools` einspielen (lokal, mit der Produktions-`DATABASE_URL` in `.env`): `npm run db:seed`.
 
 ### Eigenes git-Repo erstellen
 
-Dieser Ordner ist bereits ein git-Repo (von `create-next-app` initialisiert). Um ihn auf GitHub zu pushen:
+Dieser Ordner ist bereits ein git-Repo mit einem fertigen Commit (Branch `master`). Um ihn auf GitHub zu pushen (per GitHub-CLI, dort bereits als `skuvert` eingeloggt):
 
 ```bash
-git add -A
-git commit -m "Initial commit"
+gh repo create skuvert-dashboard --private --source=. --remote=origin --push
+```
+
+Alternative ohne `gh`: auf github.com ein neues, leeres Repo anlegen, dann:
+
+```bash
 git remote add origin <deine-neue-repo-url>
-git push -u origin main
+git push -u origin master
 ```
 
 ## 3. Struktur
