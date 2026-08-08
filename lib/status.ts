@@ -1,4 +1,4 @@
-import { CustomerStatus, InternalStatus } from "@/app/generated/prisma/enums";
+import { CustomerStatus, InternalStatus } from "@prisma/client";
 
 export const INTERNAL_STATUS_ORDER: InternalStatus[] = [
   "NEU",

@@ -8,7 +8,7 @@ import {
   CUSTOMER_STATUS_ORDER,
   CUSTOMER_STATUS_LABEL,
 } from "@/lib/status";
-import type { InternalStatus, CustomerStatus } from "@/app/generated/prisma/enums";
+import type { InternalStatus, CustomerStatus } from "@prisma/client";
 import { labelClasses } from "@/components/ui/field";
 
 export function StatusControls({

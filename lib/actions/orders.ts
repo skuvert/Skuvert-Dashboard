@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { buildDefaultChecklist } from "@/lib/order-types";
-import type { InternalStatus, CustomerStatus } from "@/app/generated/prisma/enums";
+import type { InternalStatus, CustomerStatus } from "@prisma/client";
 
 function isUniqueConstraintError(e: unknown): boolean {
   return typeof e === "object" && e !== null && "code" in e && e.code === "P2002";

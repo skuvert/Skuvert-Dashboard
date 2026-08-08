@@ -5,7 +5,7 @@ import { Pill } from "@/components/ui/Pill";
 import { buttonClasses } from "@/components/ui/Button";
 import { INTERNAL_STATUS_ORDER, INTERNAL_STATUS_LABEL, statusPillClasses } from "@/lib/status";
 import { ORDER_TYPES, orderTypeLabel } from "@/lib/order-types";
-import type { InternalStatus } from "@/app/generated/prisma/enums";
+import type { InternalStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
