@@ -7,18 +7,27 @@ import { inputClasses, labelClasses } from "@/components/ui/field";
 import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
 
+export interface PriceListEntry {
+  id: string;
+  label: string;
+  unit: string;
+  price: number;
+}
+
 export function EmailGenerator({
   orderId,
   customerName,
   initialItems,
   initialPaymentLink,
   trackingUrl,
+  priceList,
 }: {
   orderId: string;
   customerName: string;
   initialItems: CostLine[];
   initialPaymentLink: string;
   trackingUrl: string;
+  priceList: PriceListEntry[];
 }) {
   const [items, setItems] = useState<CostLine[]>(
     initialItems.length ? initialItems : [{ label: "", qty: 1, unitPrice: 0 }],
@@ -28,6 +37,16 @@ export function EmailGenerator({
   const [saved, setSaved] = useState(false);
   const [textTouched, setTextTouched] = useState(false);
   const [mailText, setMailText] = useState("");
+  const [picked, setPicked] = useState(priceList[0]?.id ?? "");
+
+  function addFromPriceList() {
+    const entry = priceList.find((p) => p.id === picked);
+    if (!entry) return;
+    setItems((prev) => {
+      const rest = prev.filter((it) => it.label.trim());
+      return [...rest, { label: entry.label, qty: 1, unitPrice: entry.price }];
+    });
+  }
 
   const generatedText = useMemo(
     () => buildEmailText({ customerName, items, paymentLink, trackingUrl }),
@@ -50,6 +69,28 @@ export function EmailGenerator({
 
   return (
     <div className="space-y-5">
+      {priceList.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-bg px-4 py-3">
+          <label htmlFor="priceListPick" className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Aus Preisliste
+          </label>
+          <select
+            id="priceListPick"
+            value={picked}
+            onChange={(e) => setPicked(e.target.value)}
+            className={`${inputClasses} min-w-[180px] flex-1`}
+          >
+            {priceList.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label} — {formatCHF(p.price)} / {p.unit}
+              </option>
+            ))}
+          </select>
+          <Button type="button" variant="secondary" onClick={addFromPriceList}>
+            + Hinzufügen
+          </Button>
+        </div>
+      )}
       <div className="space-y-2">
         {items.map((item, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2">

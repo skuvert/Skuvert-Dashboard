@@ -62,6 +62,7 @@ export async function updateOrderDetails(
   const customerEmail = String(formData.get("customerEmail") ?? "").trim();
   const orderNumber = String(formData.get("orderNumber") ?? "").trim();
   const paymentLink = String(formData.get("paymentLink") ?? "").trim();
+  const shippingAddress = String(formData.get("shippingAddress") ?? "").trim();
 
   if (!customerName) return { error: "Bitte einen Kundennamen angeben." };
   if (!orderNumber) return { error: "Bitte eine Auftragsnummer angeben." };
@@ -69,7 +70,13 @@ export async function updateOrderDetails(
   try {
     await prisma.order.update({
       where: { id: orderId },
-      data: { customerName, customerEmail, orderNumber, paymentLink: paymentLink || null },
+      data: {
+        customerName,
+        customerEmail,
+        orderNumber,
+        paymentLink: paymentLink || null,
+        shippingAddress: shippingAddress || null,
+      },
     });
   } catch (e) {
     if (isUniqueConstraintError(e)) {

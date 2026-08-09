@@ -25,14 +25,17 @@ async function getTrackingUrl(token: string) {
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const order = await prisma.order.findUnique({
-    where: { id },
-    include: {
-      notes: { orderBy: { createdAt: "desc" } },
-      costItems: { orderBy: { sortOrder: "asc" } },
-      checklistItems: { orderBy: { sortOrder: "asc" } },
-    },
-  });
+  const [order, priceList] = await Promise.all([
+    prisma.order.findUnique({
+      where: { id },
+      include: {
+        notes: { orderBy: { createdAt: "desc" } },
+        costItems: { orderBy: { sortOrder: "asc" } },
+        checklistItems: { orderBy: { sortOrder: "asc" } },
+      },
+    }),
+    prisma.ownPriceRow.findMany({ orderBy: { sortOrder: "asc" } }),
+  ]);
 
   if (!order) notFound();
 
@@ -53,9 +56,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             Erstellt am {order.createdAt.toLocaleDateString("de-CH")} · {order.customerName}
           </p>
         </div>
-        <Pill className={statusPillClasses(order.internalStatus)}>
-          {INTERNAL_STATUS_LABEL[order.internalStatus]}
-        </Pill>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/orders/${order.id}/label`}
+            className="text-sm font-semibold text-accent hover:underline"
+          >
+            Versandetikett →
+          </Link>
+          <Pill className={statusPillClasses(order.internalStatus)}>
+            {INTERNAL_STATUS_LABEL[order.internalStatus]}
+          </Pill>
+        </div>
       </div>
 
       <Card className="space-y-5">
@@ -113,6 +124,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           initialItems={order.costItems.map((c) => ({ label: c.label, qty: c.qty, unitPrice: c.unitPrice }))}
           initialPaymentLink={order.paymentLink ?? ""}
           trackingUrl={trackingUrl}
+          priceList={priceList}
         />
       </Card>
 

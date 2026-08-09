@@ -23,3 +23,14 @@ body {
   background: var(--bg);
   color: var(--ink);
 }
+
+/* Versandetikett: physische Grösse fürs Ausschneiden, Papierformat bleibt Standard (A4). */
+.print-label {
+  width: 100mm;
+  min-height: 140mm;
+}
+@media print {
+  body {
+    background: white;
+  }
+}

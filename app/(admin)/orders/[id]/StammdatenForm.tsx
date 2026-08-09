@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/Button";
 export function StammdatenForm({
   order,
 }: {
-  order: { id: string; customerName: string; customerEmail: string; orderNumber: string; paymentLink: string | null };
+  order: {
+    id: string;
+    customerName: string;
+    customerEmail: string;
+    orderNumber: string;
+    paymentLink: string | null;
+    shippingAddress: string | null;
+  };
 }) {
   const action = updateOrderDetails.bind(null, order.id);
   const [state, formAction, pending] = useActionState(action, {});
@@ -60,6 +67,19 @@ export function StammdatenForm({
           name="paymentLink"
           defaultValue={order.paymentLink ?? ""}
           placeholder="https://…"
+          className={`${inputClasses} w-full`}
+        />
+      </div>
+      <div className="sm:col-span-2">
+        <label className={labelClasses} htmlFor="shippingAddress">
+          Lieferadresse (für Versandetikett)
+        </label>
+        <textarea
+          id="shippingAddress"
+          name="shippingAddress"
+          defaultValue={order.shippingAddress ?? ""}
+          placeholder={"Strasse Nr.\nPLZ Ort\nLand (falls nicht Schweiz)"}
+          rows={3}
           className={`${inputClasses} w-full`}
         />
       </div>

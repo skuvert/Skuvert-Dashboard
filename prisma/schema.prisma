@@ -39,8 +39,9 @@ model Order {
   internalStatus InternalStatus @default(NEU)
   customerStatus CustomerStatus @default(ANFRAGE_ERHALTEN)
 
-  trackingToken String  @unique
-  paymentLink   String?
+  trackingToken   String  @unique
+  paymentLink     String?
+  shippingAddress String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
