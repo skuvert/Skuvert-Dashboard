@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { buildDefaultChecklist } from "@/lib/order-types";
-import type { InternalStatus, CustomerStatus } from "@prisma/client";
+import { extractAddress } from "@/lib/address";
+import { INTERNAL_TO_CUSTOMER_STATUS } from "@/lib/status";
+import type { InternalStatus } from "@prisma/client";
 
 function isUniqueConstraintError(e: unknown): boolean {
   return typeof e === "object" && e !== null && "code" in e && e.code === "P2002";
@@ -31,6 +33,7 @@ export async function createOrder(_prev: FormState, formData: FormData): Promise
         customerEmail,
         rawRequestText,
         orderTypes,
+        shippingAddress: extractAddress(rawRequestText) || null,
         trackingToken: crypto.randomUUID().replace(/-/g, ""),
         checklistItems: {
           create: buildDefaultChecklist(orderTypes).map((label, i) => ({
@@ -97,15 +100,18 @@ export async function updateOrderTypes(orderId: string, orderTypes: string[]) {
 }
 
 export async function updateInternalStatus(orderId: string, internalStatus: InternalStatus) {
-  await prisma.order.update({ where: { id: orderId }, data: { internalStatus } });
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { internalStatus, customerStatus: INTERNAL_TO_CUSTOMER_STATUS[internalStatus] },
+  });
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/");
 }
 
-export async function updateCustomerStatus(orderId: string, customerStatus: CustomerStatus) {
-  await prisma.order.update({ where: { id: orderId }, data: { customerStatus } });
-  revalidatePath(`/orders/${orderId}`);
+export async function deleteOrder(orderId: string) {
+  await prisma.order.delete({ where: { id: orderId } });
   revalidatePath("/");
+  redirect("/");
 }
 
 export async function addNote(orderId: string, formData: FormData) {

@@ -42,6 +42,20 @@ export const CUSTOMER_STATUS_LABEL: Record<CustomerStatus, string> = {
   ABGESCHLOSSEN: "Abgeschlossen",
 };
 
+// Kunden-Status wird nicht mehr separat gepflegt, sondern aus dem internen
+// Status abgeleitet — eine Checkliste statt zwei.
+export const INTERNAL_TO_CUSTOMER_STATUS: Record<InternalStatus, CustomerStatus> = {
+  NEU: "ANFRAGE_ERHALTEN",
+  ANGEBOT_ERSTELLT: "ANFRAGE_ERHALTEN",
+  ANGEBOT_VERSENDET: "ANGEBOT_GESENDET",
+  BESTAETIGT_BEZAHLT: "IN_PRODUKTION",
+  IN_PRODUKTION: "IN_PRODUKTION",
+  FERTIG: "VERSANDBEREIT",
+  VERSENDET: "VERSENDET",
+  ABGESCHLOSSEN: "ABGESCHLOSSEN",
+  STORNIERT: "ABGESCHLOSSEN",
+};
+
 export function statusPillClasses(status: InternalStatus | CustomerStatus): string {
   if (status === "STORNIERT") return "bg-red-50 text-red-600";
   if (status === "ABGESCHLOSSEN") return "bg-emerald-50 text-emerald-700";

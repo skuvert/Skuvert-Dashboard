@@ -33,4 +33,16 @@ body {
   body {
     background: white;
   }
+  @page {
+    margin: 0;
+  }
+  /* In der Ecke platziert statt zentriert: nur 2 statt 4 Kanten müssen
+     ausgeschnitten werden. */
+  .print-label {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    border-radius: 0;
+  }
 }

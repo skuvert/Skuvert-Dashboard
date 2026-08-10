@@ -12,6 +12,7 @@ import { StatusControls } from "./StatusControls";
 import { ChecklistSection } from "./ChecklistSection";
 import { NotesSection } from "./NotesSection";
 import { EmailGenerator } from "./EmailGenerator";
+import { DeleteOrderButton } from "./DeleteOrderButton";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <Pill className={statusPillClasses(order.internalStatus)}>
             {INTERNAL_STATUS_LABEL[order.internalStatus]}
           </Pill>
+          {order.internalStatus === "ABGESCHLOSSEN" && <DeleteOrderButton orderId={order.id} />}
         </div>
       </div>
 
@@ -80,11 +82,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
       <Card className="space-y-4">
         <h2 className="text-lg font-bold text-ink">Status</h2>
-        <StatusControls
-          orderId={order.id}
-          internalStatus={order.internalStatus}
-          customerStatus={order.customerStatus}
-        />
+        <StatusControls orderId={order.id} internalStatus={order.internalStatus} />
       </Card>
 
       <Card className="space-y-3">

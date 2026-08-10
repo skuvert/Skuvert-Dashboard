@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { updateOrderDetails } from "@/lib/actions/orders";
+import { extractAddress } from "@/lib/address";
 import { inputClasses, labelClasses } from "@/components/ui/field";
 import { Button } from "@/components/ui/Button";
 
@@ -15,10 +16,12 @@ export function StammdatenForm({
     orderNumber: string;
     paymentLink: string | null;
     shippingAddress: string | null;
+    rawRequestText: string;
   };
 }) {
   const action = updateOrderDetails.bind(null, order.id);
   const [state, formAction, pending] = useActionState(action, {});
+  const addressRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <form action={formAction} className="grid gap-4 sm:grid-cols-2">
@@ -71,10 +74,23 @@ export function StammdatenForm({
         />
       </div>
       <div className="sm:col-span-2">
-        <label className={labelClasses} htmlFor="shippingAddress">
-          Lieferadresse (für Versandetikett)
-        </label>
+        <div className="flex items-center justify-between">
+          <label className={labelClasses} htmlFor="shippingAddress">
+            Lieferadresse (für Versandetikett)
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              const extracted = extractAddress(order.rawRequestText);
+              if (extracted && addressRef.current) addressRef.current.value = extracted;
+            }}
+            className="text-xs font-semibold text-accent hover:underline"
+          >
+            Aus Anfrage übernehmen
+          </button>
+        </div>
         <textarea
+          ref={addressRef}
           id="shippingAddress"
           name="shippingAddress"
           defaultValue={order.shippingAddress ?? ""}
