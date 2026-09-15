@@ -13,6 +13,7 @@ import { ChecklistSection } from "./ChecklistSection";
 import { NotesSection } from "./NotesSection";
 import { EmailGenerator } from "./EmailGenerator";
 import { DeleteOrderButton } from "./DeleteOrderButton";
+import { BookingSection } from "./BookingSection";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         notes: { orderBy: { createdAt: "desc" } },
         costItems: { orderBy: { sortOrder: "asc" } },
         checklistItems: { orderBy: { sortOrder: "asc" } },
+        ledgerEntries: { orderBy: { type: "asc" } },
       },
     }),
     prisma.ownPriceRow.findMany({ orderBy: { sortOrder: "asc" } }),
@@ -123,6 +125,20 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           initialPaymentLink={order.paymentLink ?? ""}
           trackingUrl={trackingUrl}
           priceList={priceList}
+        />
+      </Card>
+
+      <Card className="space-y-4">
+        <h2 className="text-lg font-bold text-ink">Abrechnung</h2>
+        <BookingSection
+          orderId={order.id}
+          entries={order.ledgerEntries.map((e) => ({
+            id: e.id,
+            type: e.type === "IN" ? "in" : "out",
+            amount: e.amount,
+            category: e.category,
+            description: e.description,
+          }))}
         />
       </Card>
 

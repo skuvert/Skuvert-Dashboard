@@ -9,9 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Skuvert Dashboard",
-  description: "Internes Auftrags-Dashboard für Skuvert, Custom 3D Service.",
-  icons: { icon: "/logo.png" },
+  title: "Skuvert",
+  description: "Internes Auftrags- und Abrechnungs-Tool für Skuvert, Custom 3D Service.",
+  // Favicons kommen aus den Next-Datei-Konventionen app/icon.png, app/apple-icon.png
+  // und app/favicon.ico (aus dem S+K-Logo generiert).
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

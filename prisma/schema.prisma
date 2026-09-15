@@ -28,6 +28,11 @@ enum CustomerStatus {
   ABGESCHLOSSEN
 }
 
+enum LedgerType {
+  IN
+  OUT
+}
+
 model Order {
   id             String   @id @default(cuid())
   orderNumber    String   @unique
@@ -42,6 +47,9 @@ model Order {
   trackingToken   String  @unique
   paymentLink     String?
   shippingAddress String?
+  trackingNumber  String?
+  materialGrams   Float?
+  materialCostChf Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -49,6 +57,7 @@ model Order {
   notes          Note[]
   costItems      CostItem[]
   checklistItems ChecklistItem[]
+  ledgerEntries  LedgerEntry[]
 }
 
 model Note {
@@ -95,4 +104,40 @@ model OwnPriceRow {
   price     Float
   note      String?
   sortOrder Int     @default(0)
+}
+
+// Buchhaltung: gleiches Datenmodell wie das frühere localStorage-Tool
+// (Datum/Art/Betrag/Kategorie/Beschreibung/Kunde/Beleg) + optionale
+// Verknüpfung zu einem Auftrag.
+model LedgerEntry {
+  id          String     @id @default(cuid())
+  date        DateTime
+  type        LedgerType
+  amount      Float
+  category    String     @default("")
+  description String     @default("")
+  party       String     @default("")
+  receipt     Boolean    @default(true)
+  orderId     String?
+  order       Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+
+  @@index([orderId])
+}
+
+// Einzeiliger Datensatz für den PDF-Kopf der Abrechnung (früher localStorage-"profile").
+model LedgerProfile {
+  id    String @id @default("default")
+  name  String @default("")
+  addr  String @default("")
+  taxId String @default("")
+  place String @default("")
+  iban  String @default("")
+}
+
+// Serverseitige Ratenbegrenzung der Login-Versuche (pro IP).
+model LoginAttempt {
+  ip          String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
 }

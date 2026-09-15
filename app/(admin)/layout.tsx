@@ -11,9 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Skuvert" width={28} height={28} />
-            <span className="text-sm font-extrabold tracking-wide text-ink">
-              SKUVERT <span className="font-medium text-muted">Dashboard</span>
-            </span>
+            <span className="text-sm font-extrabold tracking-wide text-ink">SKUVERT</span>
           </Link>
           <AdminNav />
           <form action={logout}>

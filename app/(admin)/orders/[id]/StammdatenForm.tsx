@@ -16,6 +16,9 @@ export function StammdatenForm({
     orderNumber: string;
     paymentLink: string | null;
     shippingAddress: string | null;
+    trackingNumber: string | null;
+    materialGrams: number | null;
+    materialCostChf: number | null;
     rawRequestText: string;
   };
 }) {
@@ -98,6 +101,52 @@ export function StammdatenForm({
           rows={3}
           className={`${inputClasses} w-full`}
         />
+      </div>
+      <div>
+        <label className={labelClasses} htmlFor="trackingNumber">
+          Sendungsnummer (Versandverfolgung)
+        </label>
+        <input
+          id="trackingNumber"
+          name="trackingNumber"
+          defaultValue={order.trackingNumber ?? ""}
+          placeholder="z. B. 99.00.123456.78901234"
+          className={`${inputClasses} w-full`}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelClasses} htmlFor="materialGrams">
+            Material (g)
+          </label>
+          <input
+            id="materialGrams"
+            name="materialGrams"
+            type="number"
+            step="1"
+            min="0"
+            inputMode="decimal"
+            defaultValue={order.materialGrams ?? ""}
+            placeholder="z. B. 240"
+            className={`${inputClasses} w-full`}
+          />
+        </div>
+        <div>
+          <label className={labelClasses} htmlFor="materialCostChf">
+            Materialkosten (CHF)
+          </label>
+          <input
+            id="materialCostChf"
+            name="materialCostChf"
+            type="number"
+            step="0.05"
+            min="0"
+            inputMode="decimal"
+            defaultValue={order.materialCostChf ?? ""}
+            placeholder="z. B. 6.00"
+            className={`${inputClasses} w-full`}
+          />
+        </div>
       </div>
       <div className="flex items-center gap-3 sm:col-span-2">
         <Button type="submit" variant="secondary" disabled={pending}>

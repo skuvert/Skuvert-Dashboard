@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AUTH_COOKIE, isValidAuthCookie } from "@/lib/auth";
+import { AUTH_COOKIE, isValidSession } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
+  // HTTPS erzwingen (in Produktion). Vercel terminiert TLS und setzt
+  // x-forwarded-proto; bei "http" auf https umleiten.
+  if (process.env.NODE_ENV === "production") {
+    const proto = request.headers.get("x-forwarded-proto");
+    if (proto && proto !== "https") {
+      const httpsUrl = new URL(request.url);
+      httpsUrl.protocol = "https:";
+      return NextResponse.redirect(httpsUrl, 308);
+    }
+  }
+
   const cookie = request.cookies.get(AUTH_COOKIE)?.value;
-  if (await isValidAuthCookie(cookie)) {
+  if (await isValidSession(cookie)) {
     return NextResponse.next();
   }
   const loginUrl = new URL("/login", request.url);

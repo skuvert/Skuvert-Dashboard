@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 export async function upsertPostPriceRow(data: {
   id?: string;
@@ -9,6 +10,7 @@ export async function upsertPostPriceRow(data: {
   destinationZone: string;
   price: number;
 }) {
+  await requireAuth();
   if (data.id) {
     await prisma.postPriceRow.update({
       where: { id: data.id },
@@ -24,6 +26,7 @@ export async function upsertPostPriceRow(data: {
 }
 
 export async function deletePostPriceRow(id: string) {
+  await requireAuth();
   await prisma.postPriceRow.delete({ where: { id } });
   revalidatePath("/tools");
 }
@@ -35,6 +38,7 @@ export async function upsertOwnPriceRow(data: {
   price: number;
   note: string;
 }) {
+  await requireAuth();
   const note = data.note.trim() || null;
   if (data.id) {
     await prisma.ownPriceRow.update({
@@ -51,6 +55,7 @@ export async function upsertOwnPriceRow(data: {
 }
 
 export async function deleteOwnPriceRow(id: string) {
+  await requireAuth();
   await prisma.ownPriceRow.delete({ where: { id } });
   revalidatePath("/tools");
 }
