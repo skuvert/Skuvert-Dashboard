@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { FALLBACK_SESSION_SECRET } from "@/lib/admin-config";
 
 export const AUTH_COOKIE = "skuvert_auth";
-export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 Tage
+export const SESSION_TTL_SECONDS = 60 * 60 * 24; // 1 Tag
 
 // Web Crypto (crypto.subtle) statt Node "crypto", damit dieselben Funktionen
 // in der Edge-Middleware (proxy.ts) UND in Server Actions/Components laufen.
