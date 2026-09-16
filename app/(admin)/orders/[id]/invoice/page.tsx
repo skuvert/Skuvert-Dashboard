@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SENDER_ADDRESS } from "@/lib/sender-address";
 import { formatCHF, formatQty } from "@/lib/email-template";
+import { orderQrBillSvg } from "@/lib/qr-bill";
 import { InvoiceActions } from "./InvoiceActions";
 
 export const dynamic = "force-dynamic";
@@ -37,12 +38,29 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     : SENDER_ADDRESS.slice(1);
   const today = new Date().toLocaleDateString("de-CH");
 
+  // Swiss-QR-Zahlteil serverseitig aus denselben Rechnungsdaten (Betrag = Total,
+  // Zahler = Kunde) — bleibt bei Änderungen automatisch korrekt.
+  const qrSvg = lines.length
+    ? orderQrBillSvg({
+        amount: total,
+        customerName: order.customerName,
+        shippingAddress: order.shippingAddress,
+        message: `Rechnung ${order.orderNumber}`,
+      })
+    : null;
+
   return (
     <div className="space-y-6">
       <style>{`
         #admin-nav{display:none!important}
         main{padding-top:1.5rem!important}
-        @media print { .no-print{display:none!important} body{background:#fff} }
+        .qr-bill svg{ width:100%; height:auto; display:block; }
+        @media print {
+          .no-print{display:none!important}
+          body{background:#fff}
+          .qr-bill{ max-width:none!important; break-inside:avoid; margin-top:8mm; }
+          .qr-bill svg{ width:210mm; height:105mm; }
+        }
       `}</style>
 
       <div className="flex flex-wrap items-center justify-between gap-3 no-print">
@@ -118,17 +136,20 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         </table>
 
         <div className="mt-8 space-y-1 border-t border-border pt-5 text-muted">
-          <p className="font-semibold text-ink">Zahlbar innert 30 Tagen an:</p>
-          {profile?.iban?.trim() && <p>IBAN: {profile.iban}</p>}
-          {order.paymentLink && <p>Zahlungslink: {order.paymentLink}</p>}
-          {!profile?.iban?.trim() && !order.paymentLink && (
-            <p className="no-print italic">
-              Tipp: IBAN in den Abrechnungs-Kopfdaten oder einen Zahlungslink im Auftrag hinterlegen.
-            </p>
-          )}
+          <p className="font-semibold text-ink">Zahlbar innert 30 Tagen.</p>
+          {qrSvg && <p>Bezahle bequem mit dem QR-Zahlteil unten.</p>}
+          {order.paymentLink && <p>Oder online: {order.paymentLink}</p>}
           <p className="pt-3">Vielen Dank für deinen Auftrag.</p>
         </div>
       </div>
+
+      {/* Schweizer QR-Rechnung – Zahlteil (normkonform, 210×105 mm) */}
+      {qrSvg && (
+        <div
+          className="qr-bill mx-auto max-w-2xl overflow-x-auto"
+          dangerouslySetInnerHTML={{ __html: qrSvg }}
+        />
+      )}
     </div>
   );
 }
