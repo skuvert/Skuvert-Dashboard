@@ -106,7 +106,7 @@ export function EmailGenerator({
               step="0.1"
               value={item.qty}
               onChange={(e) => updateItem(i, { qty: Number(e.target.value) })}
-              className={`${inputClasses} w-16`}
+              className={`${inputClasses} w-24`}
               aria-label="Menge"
             />
             <input
