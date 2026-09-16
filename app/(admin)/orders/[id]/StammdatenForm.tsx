@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { updateOrderDetails } from "@/lib/actions/orders";
 import { extractAddress } from "@/lib/address";
 import { inputClasses, labelClasses } from "@/components/ui/field";
@@ -19,12 +19,19 @@ export function StammdatenForm({
     trackingNumber: string | null;
     materialGrams: number | null;
     materialCostChf: number | null;
+    packagingCostChf: number | null;
+    depreciationChf: number | null;
     rawRequestText: string;
   };
 }) {
   const action = updateOrderDetails.bind(null, order.id);
   const [state, formAction, pending] = useActionState(action, {});
   const addressRef = useRef<HTMLTextAreaElement>(null);
+
+  // Strom = Materialkosten × 0.15, live berechnet (server-seitig genauso).
+  const [materialCost, setMaterialCost] = useState(order.materialCostChf?.toString() ?? "");
+  const electricity = (parseFloat(materialCost.replace(",", ".")) || 0) * 0.15;
+  const chf = new Intl.NumberFormat("de-CH", { style: "currency", currency: "CHF" });
 
   return (
     <form action={formAction} className="grid gap-4 sm:grid-cols-2">
@@ -114,39 +121,90 @@ export function StammdatenForm({
           className={`${inputClasses} w-full`}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClasses} htmlFor="materialGrams">
-            Material (g)
-          </label>
-          <input
-            id="materialGrams"
-            name="materialGrams"
-            type="number"
-            step="1"
-            min="0"
-            inputMode="decimal"
-            defaultValue={order.materialGrams ?? ""}
-            placeholder="z. B. 240"
-            className={`${inputClasses} w-full`}
-          />
+      <div className="sm:col-span-2">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink">
+          Kosten (fliessen in die Abrechnung)
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div>
+            <label className={labelClasses} htmlFor="materialGrams">
+              Material (g)
+            </label>
+            <input
+              id="materialGrams"
+              name="materialGrams"
+              type="number"
+              step="1"
+              min="0"
+              inputMode="decimal"
+              defaultValue={order.materialGrams ?? ""}
+              placeholder="z. B. 240"
+              className={`${inputClasses} w-full`}
+            />
+          </div>
+          <div>
+            <label className={labelClasses} htmlFor="materialCostChf">
+              Materialkosten (CHF)
+            </label>
+            <input
+              id="materialCostChf"
+              name="materialCostChf"
+              type="number"
+              step="0.05"
+              min="0"
+              inputMode="decimal"
+              value={materialCost}
+              onChange={(e) => setMaterialCost(e.target.value)}
+              placeholder="z. B. 6.00"
+              className={`${inputClasses} w-full`}
+            />
+          </div>
+          <div>
+            <label className={labelClasses}>Strom (auto = Material × 0.15)</label>
+            <div
+              className={`${inputClasses} w-full bg-bg text-muted`}
+              aria-label="Stromkosten automatisch"
+            >
+              {chf.format(electricity)}
+            </div>
+          </div>
+          <div>
+            <label className={labelClasses} htmlFor="packagingCostChf">
+              Verpackung (CHF)
+            </label>
+            <input
+              id="packagingCostChf"
+              name="packagingCostChf"
+              type="number"
+              step="0.05"
+              min="0"
+              inputMode="decimal"
+              defaultValue={order.packagingCostChf ?? ""}
+              placeholder="z. B. 1.50"
+              className={`${inputClasses} w-full`}
+            />
+          </div>
+          <div>
+            <label className={labelClasses} htmlFor="depreciationChf">
+              Abnutzung Drucker (CHF)
+            </label>
+            <input
+              id="depreciationChf"
+              name="depreciationChf"
+              type="number"
+              step="0.05"
+              min="0"
+              inputMode="decimal"
+              defaultValue={order.depreciationChf ?? ""}
+              placeholder="z. B. 2.00"
+              className={`${inputClasses} w-full`}
+            />
+          </div>
         </div>
-        <div>
-          <label className={labelClasses} htmlFor="materialCostChf">
-            Materialkosten (CHF)
-          </label>
-          <input
-            id="materialCostChf"
-            name="materialCostChf"
-            type="number"
-            step="0.05"
-            min="0"
-            inputMode="decimal"
-            defaultValue={order.materialCostChf ?? ""}
-            placeholder="z. B. 6.00"
-            className={`${inputClasses} w-full`}
-          />
-        </div>
+        <p className="mt-2 text-xs text-muted">
+          Strom wird automatisch aus den Materialkosten berechnet. Beim Speichern werden die
+          verknüpften Abrechnungs-Zeilen aktualisiert.
+        </p>
       </div>
       <div className="flex items-center gap-3 sm:col-span-2">
         <Button type="submit" variant="secondary" disabled={pending}>

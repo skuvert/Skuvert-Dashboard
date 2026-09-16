@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { syncOrderLedger } from "@/lib/order-ledger";
 import type { LedgerType } from "@prisma/client";
 
 export type LedgerInput = {
@@ -108,56 +109,16 @@ export async function importBackup(
   return { added: valid.length };
 }
 
-// Ein-Klick-Verbuchung eines Auftrags: Einnahme aus den Kostenpositionen +
-// editierbare Ausgabenzeilen für Material / Versand / Gebühren, alle mit dem
-// Auftrag verknüpft. Verhindert Doppelbuchung.
+// Ein-Klick-Verbuchung eines Auftrags: erzeugt die abgeleiteten Zeilen
+// (Einnahme + Material/Strom/Abnutzung/Verpackung) aus den Stammdaten. Danach
+// halten sich diese Zeilen bei jeder Auftragsänderung automatisch aktuell.
 export async function bookOrder(orderId: string): Promise<{ ok: boolean; reason?: string }> {
   await requireAuth();
-  const existing = await prisma.ledgerEntry.count({ where: { orderId } });
+  const existing = await prisma.ledgerEntry.count({ where: { orderId, auto: true } });
   if (existing > 0) return { ok: false, reason: "Auftrag ist bereits verbucht." };
 
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { costItems: true },
-  });
-  if (!order) return { ok: false, reason: "Auftrag nicht gefunden." };
-
-  const income = order.costItems.reduce((sum, c) => sum + c.qty * c.unitPrice, 0);
-  const today = new Date();
-  const base = { date: today, party: order.customerName, orderId, receipt: true as const };
-
-  await prisma.ledgerEntry.createMany({
-    data: [
-      {
-        ...base,
-        type: "IN",
-        amount: Math.round(income * 100) / 100,
-        category: "Auftragsarbeit",
-        description: `Auftrag ${order.orderNumber}`,
-      },
-      {
-        ...base,
-        type: "OUT",
-        amount: Math.round((order.materialCostChf ?? 0) * 100) / 100,
-        category: "Filament / Material",
-        description: `Material ${order.orderNumber}${order.materialGrams ? ` (${order.materialGrams} g)` : ""}`,
-      },
-      {
-        ...base,
-        type: "OUT",
-        amount: 0,
-        category: "Verpackung / Versand",
-        description: `Versand ${order.orderNumber}`,
-      },
-      {
-        ...base,
-        type: "OUT",
-        amount: 0,
-        category: "Gebühren",
-        description: `Gebühren ${order.orderNumber}`,
-      },
-    ],
-  });
+  const res = await syncOrderLedger(orderId, { createIfMissing: true });
+  if (!res.ok) return res;
 
   revalidatePath("/abrechnung");
   revalidatePath("/");

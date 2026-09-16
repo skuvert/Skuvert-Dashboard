@@ -47,9 +47,11 @@ model Order {
   trackingToken   String  @unique
   paymentLink     String?
   shippingAddress String?
-  trackingNumber  String?
-  materialGrams   Float?
-  materialCostChf Float?
+  trackingNumber   String?
+  materialGrams    Float?
+  materialCostChf  Float?
+  packagingCostChf Float?
+  depreciationChf  Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,6 +120,10 @@ model LedgerEntry {
   description String     @default("")
   party       String     @default("")
   receipt     Boolean    @default(true)
+  // auto = aus einem Auftrag abgeleitet (Material/Strom/Abnutzung/Verpackung/Einnahme).
+  // Diese Zeilen werden bei jeder Auftragsänderung neu berechnet; manuelle
+  // Einträge (auto = false) bleiben unangetastet.
+  auto        Boolean    @default(false)
   orderId     String?
   order       Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
   createdAt   DateTime   @default(now())

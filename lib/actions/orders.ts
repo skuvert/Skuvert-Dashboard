@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { syncOrderLedger } from "@/lib/order-ledger";
 import { buildDefaultChecklist } from "@/lib/order-types";
 import { extractAddress } from "@/lib/address";
 import { INTERNAL_TO_CUSTOMER_STATUS } from "@/lib/status";
@@ -70,10 +71,16 @@ export async function updateOrderDetails(
   const paymentLink = String(formData.get("paymentLink") ?? "").trim();
   const shippingAddress = String(formData.get("shippingAddress") ?? "").trim();
   const trackingNumber = String(formData.get("trackingNumber") ?? "").trim();
-  const materialGramsRaw = String(formData.get("materialGrams") ?? "").trim();
-  const materialCostRaw = String(formData.get("materialCostChf") ?? "").trim();
-  const materialGrams = materialGramsRaw ? Number(materialGramsRaw.replace(",", ".")) : null;
-  const materialCostChf = materialCostRaw ? Number(materialCostRaw.replace(",", ".")) : null;
+  const num = (name: string): number | null => {
+    const raw = String(formData.get(name) ?? "").trim();
+    if (!raw) return null;
+    const n = Number(raw.replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  };
+  const materialGrams = num("materialGrams");
+  const materialCostChf = num("materialCostChf");
+  const packagingCostChf = num("packagingCostChf");
+  const depreciationChf = num("depreciationChf");
 
   if (!customerName) return { error: "Bitte einen Kundennamen angeben." };
   if (!orderNumber) return { error: "Bitte eine Auftragsnummer angeben." };
@@ -88,9 +95,10 @@ export async function updateOrderDetails(
         paymentLink: paymentLink || null,
         shippingAddress: shippingAddress || null,
         trackingNumber: trackingNumber || null,
-        materialGrams: materialGrams != null && Number.isFinite(materialGrams) ? materialGrams : null,
-        materialCostChf:
-          materialCostChf != null && Number.isFinite(materialCostChf) ? materialCostChf : null,
+        materialGrams,
+        materialCostChf,
+        packagingCostChf,
+        depreciationChf,
       },
     });
   } catch (e) {
@@ -100,8 +108,12 @@ export async function updateOrderDetails(
     throw e;
   }
 
+  // Verknüpfte Abrechnungs-Zeilen an die neuen Kosten angleichen (falls verbucht).
+  await syncOrderLedger(orderId);
+
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/");
+  revalidatePath("/abrechnung");
   return {};
 }
 
@@ -180,5 +192,9 @@ export async function saveCostItems(
       })),
     }),
   ]);
+  // Einnahme-Zeile in der Abrechnung an die neuen Positionen angleichen (falls verbucht).
+  await syncOrderLedger(orderId);
   revalidatePath(`/orders/${orderId}`);
+  revalidatePath("/abrechnung");
+  revalidatePath("/");
 }
