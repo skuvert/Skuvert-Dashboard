@@ -18,6 +18,10 @@ export default async function ShippingLabelPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
+      {/* Auf der Etiketten-Seite die obere Navigationsleiste ausblenden
+          (am Bildschirm und im Druck) — nur solange diese Seite offen ist. */}
+      <style>{`#admin-nav{display:none!important} main{padding-top:1.5rem!important}`}</style>
+
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href={`/orders/${id}`} className="text-sm font-semibold text-muted hover:text-ink">
           ← Zurück zum Auftrag
