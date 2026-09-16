@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { FALLBACK_SESSION_SECRET } from "@/lib/admin-config";
 
 export const AUTH_COOKIE = "skuvert_auth";
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 Tage
@@ -35,7 +36,7 @@ async function hmac(secret: string, message: string): Promise<string> {
 // Signierter Session-Token "<exp>.<hmac>" — trägt eine Ablaufzeit und ist ohne
 // SESSION_SECRET nicht fälschbar. Kein statischer, aus dem Passwort abgeleiteter Token mehr.
 export async function createSessionToken(ttlSeconds = SESSION_TTL_SECONDS): Promise<string> {
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET || FALLBACK_SESSION_SECRET;
   if (!secret) throw new Error("SESSION_SECRET ist nicht gesetzt.");
   const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
   const sig = await hmac(secret, String(exp));
@@ -43,7 +44,7 @@ export async function createSessionToken(ttlSeconds = SESSION_TTL_SECONDS): Prom
 }
 
 export async function isValidSession(token: string | undefined): Promise<boolean> {
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET || FALLBACK_SESSION_SECRET;
   if (!token || !secret) return false;
   const dot = token.indexOf(".");
   if (dot < 1) return false;
