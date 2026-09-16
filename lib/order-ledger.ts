@@ -1,25 +1,30 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
-// Stromkosten = Materialkosten × diesem Faktor (Vorgabe von Simon).
-export const ELECTRICITY_FACTOR = 0.15;
+// Kostensätze (Vorgaben von Simon):
+export const MATERIAL_RATE_PER_G = 3 / 100; // 100 g = 3 CHF
+export const DEPRECIATION_RATE_PER_G = 1.5 / 100; // 100 g = 1.5 CHF
+export const ELECTRICITY_FACTOR = 0.15; // Strom = Materialkosten × 0.15
+export const DESIGN_RATE_PER_H = 25; // Designzeit = 25 CHF / Stunde
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 type OrderForLedger = Prisma.OrderGetPayload<{ include: { costItems: true } }>;
 
 // Baut die abgeleiteten Abrechnungs-Zeilen aus den Auftrags-Stammdaten.
+// Material/Abnutzung/Strom werden aus dem Materialgewicht berechnet.
 // Nur Zeilen mit Betrag > 0 werden erzeugt (keine Null-Zeilen im Buch).
 export function buildOrderLedgerLines(
   order: OrderForLedger,
   date: Date,
 ): Prisma.LedgerEntryCreateManyInput[] {
+  const grams = order.materialGrams ?? 0;
   const income = round2(order.costItems.reduce((s, c) => s + c.qty * c.unitPrice, 0));
-  const material = round2(order.materialCostChf ?? 0);
+  const material = round2(grams * MATERIAL_RATE_PER_G);
   const electricity = round2(material * ELECTRICITY_FACTOR);
-  const depreciation = round2(order.depreciationChf ?? 0);
+  const depreciation = round2(grams * DEPRECIATION_RATE_PER_G);
   const packaging = round2(order.packagingCostChf ?? 0);
-  const gramsNote = order.materialGrams ? ` (${order.materialGrams} g)` : "";
+  const gramsNote = grams ? ` (${grams} g)` : "";
   const ref = order.orderNumber;
 
   const base = { date, party: order.customerName, orderId: order.id, receipt: true, auto: true };

@@ -78,9 +78,8 @@ export async function updateOrderDetails(
     return Number.isFinite(n) ? n : null;
   };
   const materialGrams = num("materialGrams");
-  const materialCostChf = num("materialCostChf");
   const packagingCostChf = num("packagingCostChf");
-  const depreciationChf = num("depreciationChf");
+  const designHours = num("designHours");
 
   if (!customerName) return { error: "Bitte einen Kundennamen angeben." };
   if (!orderNumber) return { error: "Bitte eine Auftragsnummer angeben." };
@@ -96,9 +95,8 @@ export async function updateOrderDetails(
         shippingAddress: shippingAddress || null,
         trackingNumber: trackingNumber || null,
         materialGrams,
-        materialCostChf,
         packagingCostChf,
-        depreciationChf,
+        designHours,
       },
     });
   } catch (e) {
