@@ -61,6 +61,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
         <div className="flex items-center gap-3">
           <Link
+            href={`/orders/${order.id}/invoice`}
+            className="text-sm font-semibold text-accent hover:underline"
+          >
+            Rechnung →
+          </Link>
+          <Link
             href={`/orders/${order.id}/label`}
             className="text-sm font-semibold text-accent hover:underline"
           >

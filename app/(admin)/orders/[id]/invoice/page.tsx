@@ -1,0 +1,140 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { SENDER_ADDRESS } from "@/lib/sender-address";
+import { formatCHF } from "@/lib/email-template";
+import { DESIGN_RATE_PER_H } from "@/lib/order-ledger";
+import { InvoiceActions } from "./InvoiceActions";
+
+export const dynamic = "force-dynamic";
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const [order, profile] = await Promise.all([
+    prisma.order.findUnique({
+      where: { id },
+      include: { costItems: { orderBy: { sortOrder: "asc" } } },
+    }),
+    prisma.ledgerProfile.findUnique({ where: { id: "default" } }),
+  ]);
+  if (!order) notFound();
+
+  type Line = { label: string; qty: number; unitPrice: number; total: number };
+  const lines: Line[] = [];
+  if (order.designHours && order.designHours > 0) {
+    lines.push({
+      label: `Konstruktion / Design (${order.designHours} h à ${formatCHF(DESIGN_RATE_PER_H)})`,
+      qty: order.designHours,
+      unitPrice: DESIGN_RATE_PER_H,
+      total: round2(order.designHours * DESIGN_RATE_PER_H),
+    });
+  }
+  for (const c of order.costItems) {
+    lines.push({ label: c.label, qty: c.qty, unitPrice: c.unitPrice, total: round2(c.qty * c.unitPrice) });
+  }
+  const total = round2(lines.reduce((s, l) => s + l.total, 0));
+
+  const senderName = profile?.name?.trim() || SENDER_ADDRESS[0];
+  const senderLines = profile?.addr?.trim()
+    ? profile.addr.split(/,\s*|\n/).map((s) => s.trim()).filter(Boolean)
+    : SENDER_ADDRESS.slice(1);
+  const today = new Date().toLocaleDateString("de-CH");
+
+  return (
+    <div className="space-y-6">
+      <style>{`
+        #admin-nav{display:none!important}
+        main{padding-top:1.5rem!important}
+        @media print { .no-print{display:none!important} body{background:#fff} }
+      `}</style>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 no-print">
+        <Link href={`/orders/${id}`} className="text-sm font-semibold text-muted hover:text-ink">
+          ← Zurück zum Auftrag
+        </Link>
+        <InvoiceActions />
+      </div>
+
+      {lines.length === 0 && (
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 no-print">
+          Noch keine Positionen. Trag Kostenpositionen (Angebots-E-Mail) und/oder eine Designzeit
+          (Stammdaten) ein — sie erscheinen dann auf der Rechnung.
+        </p>
+      )}
+
+      {/* Rechnungsblatt */}
+      <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-white p-10 text-sm text-ink shadow-sm print:border-0 print:shadow-none">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <p className="text-lg font-extrabold tracking-wide">{senderName}</p>
+            {senderLines.map((l, i) => (
+              <p key={i} className="text-muted">
+                {l}
+              </p>
+            ))}
+            {profile?.taxId?.trim() && <p className="text-muted">UID: {profile.taxId}</p>}
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-extrabold uppercase tracking-widest text-accent">Rechnung</p>
+            <p className="mt-2 text-muted">Nr. {order.orderNumber}</p>
+            <p className="text-muted">Datum: {today}</p>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Rechnung an</p>
+          <p className="font-semibold">{order.customerName}</p>
+          {order.shippingAddress && (
+            <p className="whitespace-pre-line text-muted">{order.shippingAddress}</p>
+          )}
+        </div>
+
+        <table className="mt-8 w-full border-collapse">
+          <thead>
+            <tr className="border-b-2 border-border text-left text-xs uppercase tracking-wide text-muted">
+              <th className="py-2 font-semibold">Position</th>
+              <th className="py-2 text-right font-semibold">Menge</th>
+              <th className="py-2 text-right font-semibold">Einzelpreis</th>
+              <th className="py-2 text-right font-semibold">Betrag</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lines.map((l, i) => (
+              <tr key={i} className="border-b border-border">
+                <td className="py-2 pr-3">{l.label}</td>
+                <td className="py-2 text-right tabular-nums">{l.qty}</td>
+                <td className="py-2 text-right tabular-nums">{formatCHF(l.unitPrice)}</td>
+                <td className="py-2 text-right font-semibold tabular-nums">{formatCHF(l.total)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={3} className="py-3 text-right text-sm font-semibold">
+                Gesamtbetrag
+              </td>
+              <td className="py-3 text-right text-lg font-extrabold text-accent tabular-nums">
+                {formatCHF(total)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div className="mt-8 space-y-1 border-t border-border pt-5 text-muted">
+          <p className="font-semibold text-ink">Zahlbar innert 30 Tagen an:</p>
+          {profile?.iban?.trim() && <p>IBAN: {profile.iban}</p>}
+          {order.paymentLink && <p>Zahlungslink: {order.paymentLink}</p>}
+          {!profile?.iban?.trim() && !order.paymentLink && (
+            <p className="no-print italic">
+              Tipp: IBAN in den Abrechnungs-Kopfdaten oder einen Zahlungslink im Auftrag hinterlegen.
+            </p>
+          )}
+          <p className="pt-3">Vielen Dank für deinen Auftrag.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
