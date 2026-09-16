@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SENDER_ADDRESS } from "@/lib/sender-address";
 import { formatCHF } from "@/lib/email-template";
-import { DESIGN_RATE_PER_H } from "@/lib/order-ledger";
 import { InvoiceActions } from "./InvoiceActions";
 
 export const dynamic = "force-dynamic";
@@ -23,18 +22,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   if (!order) notFound();
 
   type Line = { label: string; qty: number; unitPrice: number; total: number };
-  const lines: Line[] = [];
-  if (order.designHours && order.designHours > 0) {
-    lines.push({
-      label: `Konstruktion / Design (${order.designHours} h à ${formatCHF(DESIGN_RATE_PER_H)})`,
-      qty: order.designHours,
-      unitPrice: DESIGN_RATE_PER_H,
-      total: round2(order.designHours * DESIGN_RATE_PER_H),
-    });
-  }
-  for (const c of order.costItems) {
-    lines.push({ label: c.label, qty: c.qty, unitPrice: c.unitPrice, total: round2(c.qty * c.unitPrice) });
-  }
+  const lines: Line[] = order.costItems.map((c) => ({
+    label: c.label,
+    qty: c.qty,
+    unitPrice: c.unitPrice,
+    total: round2(c.qty * c.unitPrice),
+  }));
   const total = round2(lines.reduce((s, l) => s + l.total, 0));
 
   const senderName = profile?.name?.trim() || SENDER_ADDRESS[0];
@@ -60,8 +53,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
       {lines.length === 0 && (
         <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 no-print">
-          Noch keine Positionen. Trag Kostenpositionen (Angebots-E-Mail) und/oder eine Designzeit
-          (Stammdaten) ein — sie erscheinen dann auf der Rechnung.
+          Noch keine Positionen. Trag Kostenpositionen im Angebots-E-Mail-Bereich ein (z. B.
+          „Konstruktion" 1 × 60.–) — sie erscheinen dann auf der Rechnung.
         </p>
       )}
 

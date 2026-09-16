@@ -5,7 +5,6 @@ import type { Prisma } from "@prisma/client";
 export const MATERIAL_RATE_PER_G = 3 / 100; // 100 g = 3 CHF
 export const DEPRECIATION_RATE_PER_G = 1.5 / 100; // 100 g = 1.5 CHF
 export const ELECTRICITY_FACTOR = 0.15; // Strom = Materialkosten × 0.15
-export const DESIGN_RATE_PER_H = 25; // Designzeit = 25 CHF / Stunde
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 

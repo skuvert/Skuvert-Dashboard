@@ -19,7 +19,6 @@ export function StammdatenForm({
     trackingNumber: string | null;
     materialGrams: number | null;
     packagingCostChf: number | null;
-    designHours: number | null;
     rawRequestText: string;
   };
 }) {
@@ -30,12 +29,10 @@ export function StammdatenForm({
   // Aus dem Materialgewicht abgeleitet (server-seitig identisch berechnet):
   // Material 100 g = 3 CHF, Abnutzung 100 g = 1.5 CHF, Strom = Material × 0.15.
   const [grams, setGrams] = useState(order.materialGrams?.toString() ?? "");
-  const [designHours, setDesignHours] = useState(order.designHours?.toString() ?? "");
   const g = parseFloat(grams.replace(",", ".")) || 0;
   const materialCost = g * 0.03;
   const electricity = materialCost * 0.15;
   const depreciation = g * 0.015;
-  const designValue = (parseFloat(designHours.replace(",", ".")) || 0) * 25;
   const chf = new Intl.NumberFormat("de-CH", { style: "currency", currency: "CHF" });
 
   return (
@@ -176,28 +173,10 @@ export function StammdatenForm({
               className={`${inputClasses} w-full`}
             />
           </div>
-          <div>
-            <label className={labelClasses} htmlFor="designHours">
-              Designzeit (h) — {chf.format(designValue)}
-            </label>
-            <input
-              id="designHours"
-              name="designHours"
-              type="number"
-              step="0.25"
-              min="0"
-              inputMode="decimal"
-              value={designHours}
-              onChange={(e) => setDesignHours(e.target.value)}
-              placeholder="z. B. 1.5"
-              className={`${inputClasses} w-full`}
-            />
-          </div>
         </div>
         <p className="mt-2 text-xs text-muted">
           Material, Strom und Abnutzung werden automatisch aus dem Gewicht berechnet. Beim Speichern
           werden die verknüpften Abrechnungs-Zeilen aktualisiert (Null-Beträge erzeugen keine Zeile).
-          Designzeit (25.–/h) wird vorerst nur hier festgehalten.
         </p>
       </div>
       <div className="flex items-center gap-3 sm:col-span-2">

@@ -50,7 +50,6 @@ model Order {
   trackingNumber   String?
   materialGrams    Float?
   packagingCostChf Float?
-  designHours      Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
