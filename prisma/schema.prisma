@@ -74,6 +74,7 @@ model CostItem {
   order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   label     String
   qty       Float  @default(1)
+  unit      String @default("")
   unitPrice Float
   sortOrder Int    @default(0)
 }

@@ -1,7 +1,13 @@
 export interface CostLine {
   label: string;
   qty: number;
+  unit: string;
   unitPrice: number;
+}
+
+// "2.5 h" bzw. "3" — Menge mit optionaler Einheit.
+export function formatQty(item: { qty: number; unit?: string }): string {
+  return item.unit?.trim() ? `${item.qty} ${item.unit.trim()}` : `${item.qty}`;
 }
 
 export function lineTotal(item: CostLine): number {
@@ -26,7 +32,7 @@ export function buildEmailText(params: {
   const firstName = customerName.trim().split(/\s+/)[0] || "zusammen";
   const validItems = items.filter((i) => i.label.trim());
   const lines = validItems
-    .map((i) => `- ${i.label}: ${i.qty} × ${formatCHF(i.unitPrice)} = ${formatCHF(lineTotal(i))}`)
+    .map((i) => `- ${i.label}: ${formatQty(i)} × ${formatCHF(i.unitPrice)} = ${formatCHF(lineTotal(i))}`)
     .join("\n");
   const total = costTotal(validItems);
   const paymentBlock = paymentLink ? `\nZahlung ganz einfach hier: ${paymentLink}\n` : "";

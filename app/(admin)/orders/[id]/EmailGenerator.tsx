@@ -30,7 +30,7 @@ export function EmailGenerator({
   priceList: PriceListEntry[];
 }) {
   const [items, setItems] = useState<CostLine[]>(
-    initialItems.length ? initialItems : [{ label: "", qty: 1, unitPrice: 0 }],
+    initialItems.length ? initialItems : [{ label: "", qty: 1, unit: "", unitPrice: 0 }],
   );
   const [paymentLink, setPaymentLink] = useState(initialPaymentLink);
   const [saving, setSaving] = useState(false);
@@ -44,7 +44,7 @@ export function EmailGenerator({
     if (!entry) return;
     setItems((prev) => {
       const rest = prev.filter((it) => it.label.trim());
-      return [...rest, { label: entry.label, qty: 1, unitPrice: entry.price }];
+      return [...rest, { label: entry.label, qty: 1, unit: entry.unit, unitPrice: entry.price }];
     });
   }
 
@@ -106,8 +106,16 @@ export function EmailGenerator({
               step="0.1"
               value={item.qty}
               onChange={(e) => updateItem(i, { qty: Number(e.target.value) })}
-              className={`${inputClasses} w-20`}
+              className={`${inputClasses} w-16`}
               aria-label="Menge"
+            />
+            <input
+              list="cost-units"
+              value={item.unit}
+              onChange={(e) => updateItem(i, { unit: e.target.value })}
+              placeholder="Einheit"
+              className={`${inputClasses} w-20`}
+              aria-label="Einheit"
             />
             <input
               type="number"
@@ -130,9 +138,17 @@ export function EmailGenerator({
             </button>
           </div>
         ))}
+        <datalist id="cost-units">
+          <option value="Stk." />
+          <option value="h" />
+          <option value="g" />
+          <option value="kg" />
+          <option value="m" />
+          <option value="Pauschale" />
+        </datalist>
         <button
           type="button"
-          onClick={() => setItems((prev) => [...prev, { label: "", qty: 1, unitPrice: 0 }])}
+          onClick={() => setItems((prev) => [...prev, { label: "", qty: 1, unit: "", unitPrice: 0 }])}
           className="text-sm font-semibold text-accent hover:underline"
         >
           + Position hinzufügen

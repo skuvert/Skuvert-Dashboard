@@ -127,7 +127,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <EmailGenerator
           orderId={order.id}
           customerName={order.customerName}
-          initialItems={order.costItems.map((c) => ({ label: c.label, qty: c.qty, unitPrice: c.unitPrice }))}
+          initialItems={order.costItems.map((c) => ({
+            label: c.label,
+            qty: c.qty,
+            unit: c.unit,
+            unitPrice: c.unitPrice,
+          }))}
           initialPaymentLink={order.paymentLink ?? ""}
           trackingUrl={trackingUrl}
           priceList={priceList}

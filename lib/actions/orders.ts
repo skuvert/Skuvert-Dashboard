@@ -173,7 +173,7 @@ export async function deleteChecklistItem(itemId: string, orderId: string) {
 
 export async function saveCostItems(
   orderId: string,
-  items: { label: string; qty: number; unitPrice: number }[],
+  items: { label: string; qty: number; unit?: string; unitPrice: number }[],
 ) {
   await requireAuth();
   await prisma.$transaction([
@@ -183,6 +183,7 @@ export async function saveCostItems(
         orderId,
         label: item.label,
         qty: item.qty,
+        unit: item.unit?.trim() ?? "",
         unitPrice: item.unitPrice,
         sortOrder: i,
       })),

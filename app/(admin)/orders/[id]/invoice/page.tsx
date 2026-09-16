@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SENDER_ADDRESS } from "@/lib/sender-address";
-import { formatCHF } from "@/lib/email-template";
+import { formatCHF, formatQty } from "@/lib/email-template";
 import { InvoiceActions } from "./InvoiceActions";
 
 export const dynamic = "force-dynamic";
@@ -21,10 +21,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   ]);
   if (!order) notFound();
 
-  type Line = { label: string; qty: number; unitPrice: number; total: number };
+  type Line = { label: string; qty: number; unit: string; unitPrice: number; total: number };
   const lines: Line[] = order.costItems.map((c) => ({
     label: c.label,
     qty: c.qty,
+    unit: c.unit,
     unitPrice: c.unitPrice,
     total: round2(c.qty * c.unitPrice),
   }));
@@ -98,7 +99,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             {lines.map((l, i) => (
               <tr key={i} className="border-b border-border">
                 <td className="py-2 pr-3">{l.label}</td>
-                <td className="py-2 text-right tabular-nums">{l.qty}</td>
+                <td className="py-2 text-right tabular-nums">{formatQty(l)}</td>
                 <td className="py-2 text-right tabular-nums">{formatCHF(l.unitPrice)}</td>
                 <td className="py-2 text-right font-semibold tabular-nums">{formatCHF(l.total)}</td>
               </tr>
