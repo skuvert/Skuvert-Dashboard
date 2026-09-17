@@ -17,18 +17,23 @@ const CREDITOR: Data["creditor"] = {
 // bleibt der Zahler-Teil leer und wird von Hand ausgefüllt (normkonform).
 function parseDebtor(name: string, shippingAddress: string | null): Data["debtor"] | undefined {
   if (!name.trim() || !shippingAddress?.trim()) return undefined;
-  const lines = shippingAddress.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-  const zipIdx = lines.findIndex((l) => /^\d{4,5}\s+\S/.test(l));
-  if (zipIdx < 0) return undefined;
-  const m = lines[zipIdx].match(/^(\d{4,5})\s+(.+)$/);
+  // Nach Zeilen UND Kommas trennen; eine ggf. doppelt erfasste Namenszeile weglassen.
+  const tokens = shippingAddress
+    .split(/[\n,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((t) => t.toLowerCase() !== name.trim().toLowerCase());
+  const zipIdx = tokens.findIndex((t) => /^\d{4,5}\s+\S/.test(t));
+  if (zipIdx < 0) return undefined; // ohne PLZ/Ort kein normkonformer Zahler
+  const m = tokens[zipIdx].match(/^(\d{4,5})\s+(.+)$/);
   if (!m) return undefined;
   const zip = m[1];
   const city = m[2].trim();
 
-  // Strasse = Zeilen vor der PLZ-Zeile (sonst die erste andere Zeile).
-  const before = lines.slice(0, zipIdx).join(" ").trim();
-  const streetLine = before || lines.find((_, i) => i !== zipIdx) || "";
-  const sm = streetLine.match(/^(.*?)[\s,]+(\d+\s*[a-zA-Z]?)$/);
+  // Strasse = Tokens vor der PLZ-Zeile (sonst die danach) zusammengefügt.
+  const before = tokens.slice(0, zipIdx).join(" ").trim();
+  const streetLine = (before || tokens.slice(zipIdx + 1).join(" ")).trim();
+  const sm = streetLine.match(/^(.*?)[\s]+(\d+\s*[a-zA-Z]?)$/);
   const address = (sm ? sm[1] : streetLine).trim() || city;
   const buildingNumber = sm ? sm[2].replace(/\s+/g, "") : undefined;
 

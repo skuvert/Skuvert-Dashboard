@@ -109,8 +109,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             <tr className="border-b-2 border-border text-left text-xs uppercase tracking-wide text-muted">
               <th className="py-2 font-semibold">Position</th>
               <th className="py-2 text-right font-semibold">Menge</th>
-              <th className="py-2 text-right font-semibold">Einzelpreis</th>
-              <th className="py-2 text-right font-semibold">Betrag</th>
+              <th className="py-2 pl-10 text-right font-semibold">Einzelpreis</th>
+              <th className="py-2 pl-8 text-right font-semibold">Betrag</th>
             </tr>
           </thead>
           <tbody>
@@ -118,8 +118,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               <tr key={i} className="border-b border-border">
                 <td className="py-2 pr-3">{l.label}</td>
                 <td className="py-2 text-right tabular-nums">{formatQty(l)}</td>
-                <td className="py-2 text-right tabular-nums">{formatCHF(l.unitPrice)}</td>
-                <td className="py-2 text-right font-semibold tabular-nums">{formatCHF(l.total)}</td>
+                <td className="py-2 pl-10 text-right tabular-nums">{formatCHF(l.unitPrice)}</td>
+                <td className="py-2 pl-8 text-right font-semibold tabular-nums">
+                  {formatCHF(l.total)}
+                </td>
               </tr>
             ))}
           </tbody>
