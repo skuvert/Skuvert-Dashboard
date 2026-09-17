@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { syncOrderLedger } from "@/lib/order-ledger";
+import { normalizeUnit } from "@/lib/units";
 import { buildDefaultChecklist } from "@/lib/order-types";
 import { extractAddress } from "@/lib/address";
 import { INTERNAL_TO_CUSTOMER_STATUS } from "@/lib/status";
@@ -183,7 +184,7 @@ export async function saveCostItems(
         orderId,
         label: item.label,
         qty: item.qty,
-        unit: item.unit?.trim() ?? "",
+        unit: normalizeUnit(item.unit),
         unitPrice: item.unitPrice,
         sortOrder: i,
       })),

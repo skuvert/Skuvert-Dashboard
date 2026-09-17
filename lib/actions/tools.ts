@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { normalizeUnit } from "@/lib/units";
 
 export async function upsertPostPriceRow(data: {
   id?: string;
@@ -40,15 +41,16 @@ export async function upsertOwnPriceRow(data: {
 }) {
   await requireAuth();
   const note = data.note.trim() || null;
+  const unit = normalizeUnit(data.unit);
   if (data.id) {
     await prisma.ownPriceRow.update({
       where: { id: data.id },
-      data: { label: data.label, unit: data.unit, price: data.price, note },
+      data: { label: data.label, unit, price: data.price, note },
     });
   } else {
     const sortOrder = await prisma.ownPriceRow.count();
     await prisma.ownPriceRow.create({
-      data: { label: data.label, unit: data.unit, price: data.price, note, sortOrder },
+      data: { label: data.label, unit, price: data.price, note, sortOrder },
     });
   }
   revalidatePath("/tools");
