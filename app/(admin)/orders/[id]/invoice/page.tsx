@@ -104,22 +104,24 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           )}
         </div>
 
-        <table className="mt-8 w-full border-collapse">
+        <table className="mt-8 w-full border-collapse text-[13px]">
           <thead>
-            <tr className="border-b-2 border-border text-left text-xs uppercase tracking-wide text-muted">
-              <th className="py-2 font-semibold">Position</th>
-              <th className="py-2 text-right font-semibold">Menge</th>
-              <th className="py-2 pl-10 text-right font-semibold">Einzelpreis</th>
-              <th className="py-2 pl-8 text-right font-semibold">Betrag</th>
+            <tr className="border-b-2 border-border text-left text-[11px] uppercase tracking-wide text-muted">
+              <th className="py-2 pr-3 font-semibold">Position</th>
+              <th className="py-2 whitespace-nowrap text-right font-semibold">Menge</th>
+              <th className="py-2 pl-5 text-right font-semibold">Einzelpreis</th>
+              <th className="py-2 pl-5 text-right font-semibold">Betrag</th>
             </tr>
           </thead>
           <tbody>
             {lines.map((l, i) => (
-              <tr key={i} className="border-b border-border">
+              <tr key={i} className="border-b border-border align-top">
                 <td className="py-2 pr-3">{l.label}</td>
-                <td className="py-2 text-right tabular-nums">{formatQty(l)}</td>
-                <td className="py-2 pl-10 text-right tabular-nums">{formatCHF(l.unitPrice)}</td>
-                <td className="py-2 pl-8 text-right font-semibold tabular-nums">
+                <td className="whitespace-nowrap py-2 text-right tabular-nums">{formatQty(l)}</td>
+                <td className="whitespace-nowrap py-2 pl-5 text-right tabular-nums">
+                  {formatCHF(l.unitPrice)}
+                </td>
+                <td className="whitespace-nowrap py-2 pl-5 text-right font-semibold tabular-nums">
                   {formatCHF(l.total)}
                 </td>
               </tr>
@@ -127,10 +129,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={3} className="py-3 text-right text-sm font-semibold">
+              <td colSpan={3} className="py-3 pr-6 text-right text-[13px] font-semibold">
                 Gesamtbetrag
               </td>
-              <td className="py-3 text-right text-lg font-extrabold text-accent tabular-nums">
+              <td className="whitespace-nowrap py-3 pl-6 text-right text-lg font-extrabold text-accent tabular-nums">
                 {formatCHF(total)}
               </td>
             </tr>
