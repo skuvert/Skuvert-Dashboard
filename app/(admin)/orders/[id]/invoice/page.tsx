@@ -56,10 +56,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         main{padding-top:1.5rem!important}
         .qr-bill svg{ width:100%; height:auto; display:block; }
         @media print {
+          @page{ size:A4; margin:0 }
           .no-print{display:none!important}
-          body{background:#fff}
-          .qr-bill{ max-width:none!important; break-inside:avoid; margin-top:8mm; }
-          .qr-bill svg{ width:210mm; height:105mm; }
+          html,body{ background:#fff; overflow:visible!important }
+          .min-h-screen{ min-height:0!important }        /* sonst zwingt es die Seite auf volle Höhe → QR rutscht auf Seite 2 */
+          main{ padding:8mm 0 0!important }
+          .qr-bill{ max-width:none!important; overflow:hidden!important; break-inside:avoid; margin-top:6mm; }
+          .qr-bill svg{ width:100%; max-width:210mm; height:auto; }
         }
       `}</style>
 
