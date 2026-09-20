@@ -58,10 +58,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         @media print {
           @page{ size:A4; margin:0 }
           .no-print{display:none!important}
-          html,body{ background:#fff; overflow:visible!important }
-          .min-h-screen{ min-height:0!important }        /* sonst zwingt es die Seite auf volle Höhe → QR rutscht auf Seite 2 */
-          main{ padding:8mm 0 0!important }
-          .qr-bill{ max-width:none!important; overflow:hidden!important; break-inside:avoid; margin-top:6mm; }
+          html,body{ background:#fff }
+          .min-h-screen{ min-height:0!important }   /* sonst zwingt es volle Seitenhöhe → QR rutscht auf Seite 2 */
+          main{ padding:5mm 0 0!important }
+          /* Rechnungskarte kompakter, damit Rechnung + 105mm-Zahlteil auf eine Seite passen */
+          .p-10{ padding:5mm 9mm!important }
+          .mt-8{ margin-top:3.5mm!important }
+          .pt-5{ padding-top:3mm!important }
+          .pt-3{ padding-top:2mm!important }
+          .qr-bill{ max-width:none!important; margin:4mm auto 0!important; overflow:hidden!important; break-inside:avoid; }
           .qr-bill svg{ width:100%; max-width:210mm; height:auto; }
         }
       `}</style>
