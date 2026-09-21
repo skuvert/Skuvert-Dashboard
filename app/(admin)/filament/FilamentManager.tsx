@@ -10,26 +10,52 @@ type Row = { id: string; material: Material; colorName: string; colorHex: string
 
 const MATERIALS: Material[] = ["PLA", "PETG", "ABS", "TPU"];
 
-// Bekannte Standardfarben je Material – als Schnellauswahl beim Hinzufügen.
-// (Deckt sich mit der bisherigen Website-Palette; eigene Farben gehen zusätzlich.)
+// Offizielle Bambu-Lab-Farbpaletten (Name + Hex) – als Schnellauswahl und für
+// die automatische Farbton-Erkennung beim Tippen (hilfreich bei Farbblindheit).
 const KNOWN: Record<Material, { n: string; h: string }[]> = {
   PLA: [
-    { n: "Schwarz", h: "#1a1a1a" }, { n: "Grau", h: "#9ca3af" }, { n: "Weiss", h: "#f0f0f0" },
-    { n: "Blau", h: "#2563eb" }, { n: "Dunkelblau", h: "#1e3a8a" }, { n: "Hellblau", h: "#7dd3fc" },
-    { n: "Türkis", h: "#14b8a6" }, { n: "Rot", h: "#e02020" }, { n: "Orange", h: "#f97316" },
-    { n: "Hellorange", h: "#fdba74" }, { n: "Gelb", h: "#facc15" }, { n: "Braun", h: "#92400e" },
-    { n: "Grün", h: "#16a34a" }, { n: "Silber", h: "#c8c8c8" }, { n: "Gold", h: "#d4af37" },
+    { n: "Jade White", h: "#FFFFFF" }, { n: "Beige", h: "#F7E6DE" }, { n: "Light Gray", h: "#D1D3D5" },
+    { n: "Silver", h: "#A6A9AA" }, { n: "Gray", h: "#8E9089" }, { n: "Blue Grey", h: "#5B6579" },
+    { n: "Dark Gray", h: "#545454" }, { n: "Black", h: "#000000" }, { n: "Magenta", h: "#EC008C" },
+    { n: "Pink", h: "#F55A74" }, { n: "Hot Pink", h: "#F5547C" }, { n: "Maroon Red", h: "#9D2235" },
+    { n: "Red", h: "#C12E1F" }, { n: "Orange", h: "#FF6A13" }, { n: "Pumpkin Orange", h: "#FF9016" },
+    { n: "Gold", h: "#E4BD68" }, { n: "Sunflower Yellow", h: "#FEC600" }, { n: "Yellow", h: "#F4EE2A" },
+    { n: "Bright Green", h: "#BECF00" }, { n: "Bambu Green", h: "#00AE42" }, { n: "Mistletoe Green", h: "#3F8E43" },
+    { n: "Turquoise", h: "#00B1B7" }, { n: "Cyan", h: "#0086D6" }, { n: "Blue", h: "#0A2989" },
+    { n: "Cobalt Blue", h: "#0056B8" }, { n: "Purple", h: "#5E43B7" }, { n: "Indigo Purple", h: "#482960" },
+    { n: "Bronze", h: "#847D48" }, { n: "Cocoa Brown", h: "#6F5034" }, { n: "Brown", h: "#9D432C" },
   ],
   PETG: [
-    { n: "Grau", h: "#9ca3af" }, { n: "Schwarz", h: "#1a1a1a" }, { n: "Dunkelgrün", h: "#14532d" },
-    { n: "Durchsichtig", h: "repeating-conic-gradient(#e2e8f0 0% 25%, #ffffff 0% 50%) 50% / 10px 10px" },
-    { n: "Misty Blue", h: "#9db4c0" },
+    { n: "White", h: "#FFFFFF" }, { n: "Dark Beige", h: "#DBC8B6" }, { n: "Gray", h: "#7F7E83" },
+    { n: "Black", h: "#000000" }, { n: "Red", h: "#D6001C" }, { n: "Orange", h: "#FF671F" },
+    { n: "Yellow", h: "#FCE300" }, { n: "Green", h: "#009639" }, { n: "Pine Green", h: "#034638" },
+    { n: "Misty Blue", h: "#688197" }, { n: "Navy Blue", h: "#0086D6" }, { n: "Reflex Blue", h: "#001489" },
+    { n: "Dark Brown", h: "#4F2C1D" },
   ],
-  ABS: [{ n: "Schwarz", h: "#1a1a1a" }, { n: "Weiss", h: "#f0f0f0" }],
-  TPU: [{ n: "Schwarz", h: "#1a1a1a" }, { n: "Grau", h: "#9ca3af" }],
+  ABS: [
+    { n: "White", h: "#FFFFFF" }, { n: "Desert Tan", h: "#E8DBB7" }, { n: "Silver", h: "#87909A" },
+    { n: "Black", h: "#000000" }, { n: "Red", h: "#D32941" }, { n: "Orange", h: "#FF6A13" },
+    { n: "Tangerine Yellow", h: "#FFC72C" }, { n: "Olive", h: "#789D4A" }, { n: "Azure", h: "#489FDF" },
+    { n: "Blue", h: "#0A2CA5" }, { n: "Navy Blue", h: "#0C2340" }, { n: "Purple", h: "#AF1685" },
+  ],
+  TPU: [
+    { n: "White", h: "#FFFFFF" }, { n: "Gray", h: "#898D8D" }, { n: "Black", h: "#101820" },
+    { n: "Red", h: "#C8102E" }, { n: "Yellow", h: "#F3E600" }, { n: "Blue", h: "#0072CE" },
+  ],
 };
 
-function Swatch({ hex, size = 22 }: { hex: string; size?: number }) {
+// Farbton zu einem getippten Namen finden (erst im gewählten Material, sonst
+// materialübergreifend). Ermöglicht: "Beige" tippen -> Farbe wird automatisch gesetzt.
+function hexForName(material: Material, name: string): string | null {
+  const key = name.trim().toLowerCase();
+  if (!key) return null;
+  const hit =
+    KNOWN[material].find((c) => c.n.toLowerCase() === key) ||
+    MATERIALS.flatMap((m) => KNOWN[m]).find((c) => c.n.toLowerCase() === key);
+  return hit ? hit.h : null;
+}
+
+function Swatch({ hex, size = 20 }: { hex: string; size?: number }) {
   return (
     <span
       className="inline-block flex-none rounded-full border border-border"
@@ -51,6 +77,22 @@ export function FilamentManager({ rows }: { rows: Row[] }) {
     return g;
   }, [rows]);
 
+  const totalSpools = useMemo(() => rows.reduce((s, r) => s + r.count, 0), [rows]);
+  const totalColors = useMemo(() => rows.filter((r) => r.count > 0).length, [rows]);
+
+  // Name tippen -> passenden Bambu-Farbton automatisch übernehmen (Farbblindheit).
+  function onNameChange(v: string) {
+    setColorName(v);
+    const h = hexForName(material, v);
+    if (h) setColorHex(h);
+  }
+  function onMaterialChange(m: Material) {
+    setMaterial(m);
+    setColorName("");
+    const h = hexForName(m, colorName);
+    if (h) setColorHex(h);
+  }
+
   function add() {
     if (!colorName.trim()) return;
     startTransition(() =>
@@ -60,139 +102,140 @@ export function FilamentManager({ rows }: { rows: Row[] }) {
     setCount(1);
   }
 
-  // gültiger Hex-Wert für das native <input type=color> (Gradienten ausklammern)
   const pickerValue = /^#[0-9a-fA-F]{6}$/.test(colorHex) ? colorHex : "#1a1a1a";
 
   return (
-    <div className="space-y-8">
-      {/* ---- Hinzufügen ---- */}
-      <div className="rounded-xl border border-border bg-bg/40 p-4">
-        <div className="mb-3 text-sm font-bold text-ink">Spule hinzufügen</div>
+    <div className="space-y-5">
+      {/* ---- Gesamtübersicht ---- */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-xl bg-accent/5 px-4 py-3">
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-extrabold tabular-nums text-accent">{totalSpools}</span>
+          <span className="text-sm font-semibold text-ink">Spulen gesamt</span>
+        </div>
+        <span className="text-sm text-muted">{totalColors} Farben aktiv</span>
+        <div className="ml-auto flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+          {MATERIALS.map((m) => (
+            <span key={m}>
+              <span className="font-semibold text-ink">{m}</span> {grouped[m].reduce((s, r) => s + r.count, 0)}
+            </span>
+          ))}
+        </div>
+      </div>
 
-        <div className="flex flex-wrap items-end gap-3">
+      {/* ---- Hinzufügen (kompakt) ---- */}
+      <div className="rounded-xl border border-border bg-bg/40 p-3">
+        <div className="flex flex-wrap items-end gap-2.5">
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Material</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Material</span>
             <select
               value={material}
-              onChange={(e) => {
-                setMaterial(e.target.value as Material);
-                setColorName("");
-              }}
-              className={`${inputClasses} w-28`}
+              onChange={(e) => onMaterialChange(e.target.value as Material)}
+              className={`${inputClasses} h-10 w-24 py-1.5`}
             >
               {MATERIALS.map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
           </label>
-
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Farbe</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Farbe</span>
             <input
               value={colorName}
-              onChange={(e) => setColorName(e.target.value)}
-              placeholder="z. B. Schwarz"
-              className={`${inputClasses} w-44`}
+              onChange={(e) => onNameChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && add()}
+              placeholder="z. B. Beige"
+              list="bambu-colors"
+              className={`${inputClasses} h-10 w-44 py-1.5`}
             />
+            <datalist id="bambu-colors">
+              {KNOWN[material].map((c) => (
+                <option key={c.n} value={c.n} />
+              ))}
+            </datalist>
           </label>
-
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Farbton</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Farbton</span>
             <input
               type="color"
               value={pickerValue}
               onChange={(e) => setColorHex(e.target.value)}
-              className="h-11 w-14 cursor-pointer rounded-xl border-2 border-border bg-white p-1"
+              className="h-10 w-12 cursor-pointer rounded-xl border-2 border-border bg-white p-1"
               aria-label="Farbton wählen"
             />
           </label>
-
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Anzahl</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Anzahl</span>
             <input
               type="number"
               min={1}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className={`${inputClasses} w-20`}
+              className={`${inputClasses} h-10 w-16 py-1.5`}
             />
           </label>
-
-          <Button type="button" onClick={add}>+ Hinzufügen</Button>
+          <Button type="button" onClick={add} className="h-10 py-1.5">+ Hinzufügen</Button>
         </div>
-
-        {/* Schnellauswahl bekannter Farben des gewählten Materials */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {KNOWN[material].map((c) => (
-            <button
-              key={c.n}
-              type="button"
-              onClick={() => { setColorName(c.n); setColorHex(c.h); }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-2.5 py-1 text-xs font-medium text-ink hover:border-accent"
-            >
-              <Swatch hex={c.h} size={14} />
-              {c.n}
-            </button>
-          ))}
-        </div>
+        <p className="mt-2 text-[11px] text-muted">
+          Tipp: Bambu-Farbnamen tippen (z. B. „Beige") — der Farbton wird automatisch gesetzt.
+        </p>
       </div>
 
-      {/* ---- Bestand ---- */}
+      {/* ---- Bestand (kompakt, 2 Spalten) ---- */}
       {MATERIALS.map((m) => (
         <div key={m}>
-          <div className="mb-2 flex items-baseline gap-2">
-            <h2 className="text-lg font-bold text-ink">{m}</h2>
+          <div className="mb-1.5 flex items-baseline gap-2">
+            <h2 className="text-base font-bold text-ink">{m}</h2>
             <span className="text-xs text-muted">
               {grouped[m].reduce((s, r) => s + r.count, 0)} Spulen · {grouped[m].filter((r) => r.count > 0).length} Farben
             </span>
           </div>
 
           {grouped[m].length === 0 ? (
-            <p className="text-sm text-muted">Noch keine Farben erfasst.</p>
+            <p className="text-xs text-muted">Noch keine Farben erfasst.</p>
           ) : (
-            <ul className="divide-y divide-border rounded-xl border border-border">
+            <div className="grid gap-1.5 sm:grid-cols-2">
               {grouped[m].map((r) => (
-                <li
+                <div
                   key={r.id}
-                  className={`flex items-center gap-3 px-3 py-2 ${r.count === 0 ? "opacity-45" : ""}`}
+                  className={`flex items-center gap-2.5 rounded-lg border border-border px-2.5 py-1.5 ${r.count === 0 ? "opacity-45" : ""}`}
                 >
                   <Swatch hex={r.colorHex} />
-                  <span className="flex-1 text-sm font-medium text-ink">{r.colorName}</span>
+                  <span className="flex-1 truncate text-sm font-medium text-ink">{r.colorName}</span>
                   {r.count === 0 && (
-                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
-                      ausgegangen
+                    <span className="rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
+                      leer
                     </span>
                   )}
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => startTransition(() => adjustSpool(r.id, -1))}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-ink hover:bg-bg disabled:opacity-40"
-                      disabled={r.count === 0}
-                      aria-label="Eine weniger"
-                    >
-                      −
-                    </button>
-                    <span className="w-8 text-center text-sm font-bold tabular-nums text-ink">{r.count}</span>
-                    <button
-                      type="button"
-                      onClick={() => startTransition(() => adjustSpool(r.id, 1))}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-ink hover:bg-bg"
-                      aria-label="Eine mehr"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => startTransition(() => adjustSpool(r.id, -1))}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-ink hover:bg-bg disabled:opacity-40"
+                    disabled={r.count === 0}
+                    aria-label="Eine weniger"
+                  >
+                    −
+                  </button>
+                  <span className="w-5 text-center text-sm font-bold tabular-nums text-ink">{r.count}</span>
+                  <button
+                    type="button"
+                    onClick={() => startTransition(() => adjustSpool(r.id, 1))}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-ink hover:bg-bg"
+                    aria-label="Eine mehr"
+                  >
+                    +
+                  </button>
                   <button
                     type="button"
                     onClick={() => startTransition(() => deleteSpool(r.id))}
-                    className="ml-1 text-xs text-muted hover:text-red-600"
+                    className="text-muted hover:text-red-600"
+                    aria-label="Entfernen"
+                    title="Entfernen"
                   >
-                    Entfernen
+                    ×
                   </button>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       ))}
