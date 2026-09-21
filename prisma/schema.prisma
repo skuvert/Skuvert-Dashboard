@@ -33,6 +33,13 @@ enum LedgerType {
   OUT
 }
 
+enum FilamentMaterial {
+  PLA
+  PETG
+  ABS
+  TPU
+}
+
 model Order {
   id             String   @id @default(cuid())
   orderNumber    String   @unique
@@ -128,6 +135,24 @@ model LedgerEntry {
   createdAt   DateTime   @default(now())
 
   @@index([orderId])
+}
+
+// Filament-Bestand. Eine Zeile pro Material+Farbe; count = Anzahl 1-kg-Spulen.
+// Quelle der Wahrheit für die Material-/Farbauswahl auf der öffentlichen Website
+// (über die read-only Route /api/filament). count = 0 → auf der Website ausgeblendet.
+model FilamentSpool {
+  id        String           @id @default(cuid())
+  material  FilamentMaterial
+  colorName String
+  // CSS-Wert für die Farbvorschau (Hex wie "#1a1a1a" ODER ein Gradient-String
+  // wie bei "Durchsichtig") — wird 1:1 als background auf der Website genutzt.
+  colorHex  String           @default("#9ca3af")
+  count     Int              @default(1)
+  sortOrder Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([material, colorName])
 }
 
 // Einzeiliger Datensatz für den PDF-Kopf der Abrechnung (früher localStorage-"profile").

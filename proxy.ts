@@ -25,5 +25,5 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // ".*\\..*" schliesst alle statischen Dateien aus (z.B. /logo.png) — Next.js
   // Seiten-Routen haben nie eine Dateiendung in der URL.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*|login|status).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*|login|status|api/filament).*)"],
 };
