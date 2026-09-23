@@ -2,13 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SENDER_ADDRESS } from "@/lib/sender-address";
-import { formatCHF, formatQty } from "@/lib/email-template";
+import { formatCHF, formatQty, isDiscount, subtotal, costTotal, lineAmount } from "@/lib/email-template";
 import { orderQrBillSvg } from "@/lib/qr-bill";
 import { InvoiceActions } from "./InvoiceActions";
 
 export const dynamic = "force-dynamic";
-
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,15 +20,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   ]);
   if (!order) notFound();
 
-  type Line = { label: string; qty: number; unit: string; unitPrice: number; total: number };
-  const lines: Line[] = order.costItems.map((c) => ({
-    label: c.label,
-    qty: c.qty,
-    unit: c.unit,
-    unitPrice: c.unitPrice,
-    total: round2(c.qty * c.unitPrice),
-  }));
-  const total = round2(lines.reduce((s, l) => s + l.total, 0));
+  const regular = order.costItems.filter((c) => !isDiscount(c));
+  const discounts = order.costItems.filter(isDiscount);
+  const sub = subtotal(order.costItems);
+  const total = costTotal(order.costItems);
 
   const senderName = profile?.name?.trim() || SENDER_ADDRESS[0];
   const senderLines = profile?.addr?.trim()
@@ -40,7 +33,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
   // Swiss-QR-Zahlteil serverseitig aus denselben Rechnungsdaten (Betrag = Total,
   // Zahler = Kunde) — bleibt bei Änderungen automatisch korrekt.
-  const qrSvg = lines.length
+  const qrSvg = order.costItems.length
     ? orderQrBillSvg({
         amount: total,
         customerName: order.customerName,
@@ -78,10 +71,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         <InvoiceActions />
       </div>
 
-      {lines.length === 0 && (
+      {order.costItems.length === 0 && (
         <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 no-print">
           Noch keine Positionen. Trag Kostenpositionen im Angebots-E-Mail-Bereich ein (z. B.
-          „Konstruktion" 1 × 60.–) — sie erscheinen dann auf der Rechnung.
+          „Konstruktion“ 1 × 60.–) — sie erscheinen dann auf der Rechnung.
         </p>
       )}
 
@@ -122,7 +115,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             </tr>
           </thead>
           <tbody>
-            {lines.map((l, i) => (
+            {regular.map((l, i) => (
               <tr key={i} className="border-b border-border align-top">
                 <td className="py-2 pr-3">{l.label}</td>
                 <td className="whitespace-nowrap py-2 text-right tabular-nums">{formatQty(l)}</td>
@@ -130,10 +123,35 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
                   {formatCHF(l.unitPrice)}
                 </td>
                 <td className="whitespace-nowrap py-2 pl-5 text-right font-semibold tabular-nums">
-                  {formatCHF(l.total)}
+                  {formatCHF(l.qty * l.unitPrice)}
                 </td>
               </tr>
             ))}
+            {discounts.length > 0 && (
+              <>
+                <tr className="align-top">
+                  <td colSpan={3} className="py-2 pr-3 text-right text-muted">
+                    Zwischensumme
+                  </td>
+                  <td className="whitespace-nowrap py-2 pl-5 text-right tabular-nums">
+                    {formatCHF(sub)}
+                  </td>
+                </tr>
+                {discounts.map((d, i) => (
+                  <tr key={`d${i}`} className="border-b border-border align-top text-red-600">
+                    <td className="py-2 pr-3">
+                      {d.label}
+                      {d.kind === "discountPct" ? ` (−${Math.abs(d.unitPrice)}%)` : ""}
+                    </td>
+                    <td />
+                    <td />
+                    <td className="whitespace-nowrap py-2 pl-5 text-right font-semibold tabular-nums">
+                      {formatCHF(lineAmount(d, sub))}
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
           </tbody>
           <tfoot>
             <tr>

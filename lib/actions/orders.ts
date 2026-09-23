@@ -146,6 +146,18 @@ export async function addNote(orderId: string, formData: FormData) {
   revalidatePath(`/orders/${orderId}`);
 }
 
+// Kundennotiz (in der öffentlichen Status-Ansicht sichtbar). Leer => null => ausgeblendet.
+export async function updateCustomerNote(orderId: string, formData: FormData) {
+  await requireAuth();
+  const note = String(formData.get("customerNote") ?? "").trim();
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { customerNote: note || null },
+  });
+  revalidatePath(`/orders/${orderId}`);
+  // Die öffentliche Status-Seite ist force-dynamic und liest bei jedem Aufruf frisch.
+}
+
 export async function toggleChecklistItem(itemId: string, orderId: string, checked: boolean) {
   await requireAuth();
   await prisma.checklistItem.update({
@@ -174,20 +186,26 @@ export async function deleteChecklistItem(itemId: string, orderId: string) {
 
 export async function saveCostItems(
   orderId: string,
-  items: { label: string; qty: number; unit?: string; unitPrice: number }[],
+  items: { label: string; qty: number; unit?: string; unitPrice: number; kind?: string }[],
 ) {
   await requireAuth();
+  const allowedKinds = new Set(["line", "discountPct", "discountFixed"]);
   await prisma.$transaction([
     prisma.costItem.deleteMany({ where: { orderId } }),
     prisma.costItem.createMany({
-      data: items.map((item, i) => ({
-        orderId,
-        label: item.label,
-        qty: item.qty,
-        unit: normalizeUnit(item.unit),
-        unitPrice: item.unitPrice,
-        sortOrder: i,
-      })),
+      data: items.map((item, i) => {
+        const kind = allowedKinds.has(item.kind ?? "") ? (item.kind as string) : "line";
+        const isDiscount = kind !== "line";
+        return {
+          orderId,
+          label: item.label.trim() || (isDiscount ? "Rabatt" : item.label),
+          qty: isDiscount ? 1 : item.qty,
+          unit: isDiscount ? "" : normalizeUnit(item.unit),
+          unitPrice: item.unitPrice,
+          kind,
+          sortOrder: i,
+        };
+      }),
     }),
   ]);
   // Einnahme-Zeile in der Abrechnung an die neuen Positionen angleichen (falls verbucht).

@@ -26,6 +26,12 @@ export default async function TrackingPage({ params }: { params: Promise<{ token
           <p className="text-sm text-muted">Auftrag {order.orderNumber}</p>
         </div>
 
+        {order.customerNote?.trim() && (
+          <p className="mb-6 whitespace-pre-line rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-center text-sm font-semibold text-ink">
+            {order.customerNote.trim()}
+          </p>
+        )}
+
         {cancelled ? (
           <p className="rounded-xl bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-600">
             Dieser Auftrag wurde storniert. Bei Fragen melde dich gerne bei uns.

@@ -11,6 +11,7 @@ import { OrderTypesEditor } from "./OrderTypesEditor";
 import { StatusControls } from "./StatusControls";
 import { ChecklistSection } from "./ChecklistSection";
 import { NotesSection } from "./NotesSection";
+import { CustomerNoteSection } from "./CustomerNoteSection";
 import { EmailGenerator } from "./EmailGenerator";
 import { DeleteOrderButton } from "./DeleteOrderButton";
 import { BookingSection } from "./BookingSection";
@@ -105,6 +106,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
       </Card>
 
+      <Card className="space-y-3">
+        <h2 className="text-lg font-bold text-ink">Kundennotiz (öffentlich)</h2>
+        <p className="text-sm text-muted">
+          Optionaler Freitext, den der Kunde in der Status-Ansicht sieht (z. B. „12 von 40
+          fertiggestellt“). Leer lassen = wird nicht angezeigt.
+        </p>
+        <CustomerNoteSection orderId={order.id} initialNote={order.customerNote ?? ""} />
+      </Card>
+
       <Card className="space-y-4">
         <h2 className="text-lg font-bold text-ink">Checkliste</h2>
         <ChecklistSection orderId={order.id} items={order.checklistItems} />
@@ -132,6 +142,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             qty: c.qty,
             unit: c.unit,
             unitPrice: c.unitPrice,
+            kind: c.kind,
           }))}
           initialPaymentLink={order.paymentLink ?? ""}
           trackingUrl={trackingUrl}

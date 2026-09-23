@@ -53,6 +53,9 @@ model Order {
 
   trackingToken   String  @unique
   paymentLink     String?
+  // Freitext-Notiz für den Kunden (z. B. "12 von 40 fertiggestellt").
+  // Wird – falls gesetzt – in der öffentlichen Status-Ansicht angezeigt.
+  customerNote    String?
   shippingAddress String?
   trackingNumber   String?
   materialGrams    Float?
@@ -83,6 +86,8 @@ model CostItem {
   qty       Float  @default(1)
   unit      String @default("")
   unitPrice Float
+  // "line" (Standard) | "discountPct" (unitPrice = Prozent) | "discountFixed" (unitPrice = CHF)
+  kind      String @default("line")
   sortOrder Int    @default(0)
 }
 

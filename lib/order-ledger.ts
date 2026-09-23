@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { costTotal } from "@/lib/email-template";
 
 // Kostensätze (Vorgaben von Simon):
 export const MATERIAL_RATE_PER_G = 3 / 100; // 100 g = 3 CHF
@@ -18,7 +19,8 @@ export function buildOrderLedgerLines(
   date: Date,
 ): Prisma.LedgerEntryCreateManyInput[] {
   const grams = order.materialGrams ?? 0;
-  const income = round2(order.costItems.reduce((s, c) => s + c.qty * c.unitPrice, 0));
+  // Einnahme = Total inkl. Rabatte (gleiche Logik wie Angebot/Rechnung).
+  const income = round2(costTotal(order.costItems));
   const material = round2(grams * MATERIAL_RATE_PER_G);
   const electricity = round2(material * ELECTRICITY_FACTOR);
   const depreciation = round2(grams * DEPRECIATION_RATE_PER_G);
