@@ -18,6 +18,16 @@ export default async function LoginPage({
           <h1 className="text-xl font-extrabold text-ink">Anmelden</h1>
         </div>
         <LoginForm next={next ?? "/"} />
+        <p className="mt-6 text-center text-xs text-muted">
+          <a
+            href="https://skuvert.github.io"
+            target="_blank"
+            rel="noopener"
+            className="hover:text-accent hover:underline"
+          >
+            → Zur öffentlichen Webseite
+          </a>
+        </p>
       </Card>
     </div>
   );
