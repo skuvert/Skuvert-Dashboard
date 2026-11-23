@@ -1,28 +1,28 @@
 import { prisma } from "@/lib/prisma";
 
-// Serverseitige Ratenbegrenzung der Login-Versuche pro IP.
-// ponytail: fixes Fenster in der DB, reicht für ein Ein-Admin-Tool; bei Bedarf
-// auf ein rollendes Fenster / gemeinsamen Store (z. B. Upstash) heben.
+// Serverseitige Ratenbegrenzung pro Schlüssel (Login: IP, Uploads: "upload:IP").
+// ponytail: fixes Fenster in der DB (Tabelle LoginAttempt), reicht für ein
+// Ein-Admin-Tool; bei Bedarf auf ein rollendes Fenster / Upstash heben.
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
 
-export async function isRateLimited(ip: string): Promise<boolean> {
-  const row = await prisma.loginAttempt.findUnique({ where: { ip } });
+export async function isRateLimited(key: string, max = MAX_ATTEMPTS, windowMs = WINDOW_MS): Promise<boolean> {
+  const row = await prisma.loginAttempt.findUnique({ where: { ip: key } });
   if (!row) return false;
-  if (Date.now() - row.windowStart.getTime() > WINDOW_MS) return false; // Fenster abgelaufen
-  return row.count >= MAX_ATTEMPTS;
+  if (Date.now() - row.windowStart.getTime() > windowMs) return false; // Fenster abgelaufen
+  return row.count >= max;
 }
 
-export async function registerFailedAttempt(ip: string): Promise<void> {
-  const row = await prisma.loginAttempt.findUnique({ where: { ip } });
-  const windowExpired = !row || Date.now() - row.windowStart.getTime() > WINDOW_MS;
+export async function registerFailedAttempt(key: string, windowMs = WINDOW_MS): Promise<void> {
+  const row = await prisma.loginAttempt.findUnique({ where: { ip: key } });
+  const windowExpired = !row || Date.now() - row.windowStart.getTime() > windowMs;
   await prisma.loginAttempt.upsert({
-    where: { ip },
-    create: { ip, count: 1 },
+    where: { ip: key },
+    create: { ip: key, count: 1 },
     update: windowExpired ? { count: 1, windowStart: new Date() } : { count: { increment: 1 } },
   });
 }
 
-export async function resetAttempts(ip: string): Promise<void> {
-  await prisma.loginAttempt.deleteMany({ where: { ip } });
+export async function resetAttempts(key: string): Promise<void> {
+  await prisma.loginAttempt.deleteMany({ where: { ip: key } });
 }
