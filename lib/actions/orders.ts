@@ -8,6 +8,7 @@ import { syncOrderLedger } from "@/lib/order-ledger";
 import { normalizeUnit } from "@/lib/units";
 import { buildDefaultChecklist } from "@/lib/order-types";
 import { extractAddress } from "@/lib/address";
+import { attachmentIds, deleteAttachments } from "@/lib/attachments";
 import { INTERNAL_TO_CUSTOMER_STATUS } from "@/lib/status";
 import type { InternalStatus } from "@prisma/client";
 
@@ -133,6 +134,16 @@ export async function updateInternalStatus(orderId: string, internalStatus: Inte
 
 export async function deleteOrder(orderId: string) {
   await requireAuth();
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { rawRequestText: true } });
+  // Anhänge des Auftrags mitlöschen. Schlägt das fehl, trotzdem weiter –
+  // Vercel löscht sie spätestens nach 90 Tagen selbst.
+  if (order) {
+    try {
+      await deleteAttachments(attachmentIds(order.rawRequestText));
+    } catch (err) {
+      console.error("Anhänge konnten nicht gelöscht werden", err);
+    }
+  }
   await prisma.order.delete({ where: { id: orderId } });
   revalidatePath("/");
   redirect("/");

@@ -15,6 +15,8 @@ import { CustomerNoteSection } from "./CustomerNoteSection";
 import { EmailGenerator } from "./EmailGenerator";
 import { DeleteOrderButton } from "./DeleteOrderButton";
 import { BookingSection } from "./BookingSection";
+import { AttachmentList, type AttachmentRow } from "@/components/AttachmentList";
+import { attachmentIds, KEEP_DAYS, listAttachments, toRows } from "@/lib/attachments";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +46,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if (!order) notFound();
 
   const trackingUrl = await getTrackingUrl(order.trackingToken);
+
+  // Anhänge über den Link im Anfrage-Text finden; Blob-Fehler sollen die Seite nicht kippen.
+  const attachIds = attachmentIds(order.rawRequestText);
+  let attachRows: AttachmentRow[] | null = [];
+  if (attachIds.length) {
+    try {
+      attachRows = toRows(await listAttachments(attachIds));
+    } catch {
+      attachRows = null;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -88,6 +101,21 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <OrderTypesEditor orderId={order.id} initial={order.orderTypes} />
         </div>
       </Card>
+
+      {attachIds.length > 0 && (
+        <Card className="space-y-3">
+          <h2 className="text-lg font-bold text-ink">Anhänge</h2>
+          <p className="text-sm text-muted">
+            Vom Kunden über das Website-Formular hochgeladen. Wird der Auftrag gelöscht, werden diese
+            Dateien mitgelöscht; sonst automatisch {KEEP_DAYS} Tage nach dem Hochladen.
+          </p>
+          {attachRows ? (
+            <AttachmentList rows={attachRows} path={`/orders/${order.id}`} />
+          ) : (
+            <p className="text-sm text-red-600">Anhänge konnten gerade nicht geladen werden.</p>
+          )}
+        </Card>
+      )}
 
       <Card className="space-y-4">
         <h2 className="text-lg font-bold text-ink">Status</h2>
