@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { BLOB_TOKEN, KEEP_DAYS } from "@/lib/attachments";
 import { isRateLimited, registerFailedAttempt } from "@/lib/login-rate-limit";
 
 // Öffentliche Upload-Route für Anhänge aus dem Bestellformular der Website.
@@ -18,7 +19,6 @@ const CORS = {
 const EXT = "jpg|jpeg|png|webp|heic|pdf|mp4|mov|stl|obj|step|stp|3mf|dxf|dwg|f3d";
 const PATH_RE = new RegExp(`^anhang/[a-z0-9]{20}/[^/]{1,120}\\.(${EXT})$`, "i");
 const MAX_BYTES = 25 * 1024 * 1024;
-const KEEP_DAYS = 90;
 const TOKENS_PER_HOUR = 40; // = Dateien pro Stunde und IP
 
 export function OPTIONS() {
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as HandleUploadBody;
     const json = await handleUpload({
+      token: BLOB_TOKEN(),
       body,
       request,
       onBeforeGenerateToken: async (pathname) => {

@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { del } from "@vercel/blob";
 import { requireAuth } from "@/lib/auth";
-import { isAttachmentUrl } from "@/lib/attachments";
+import { BLOB_TOKEN, isAttachmentPath } from "@/lib/attachments";
 
-export async function deleteAttachmentFiles(urls: string[], path: string) {
+export async function deleteAttachmentFiles(paths: string[], path: string) {
   await requireAuth();
-  const ok = urls.filter(isAttachmentUrl);
-  if (ok.length) await del(ok);
+  const ok = paths.filter(isAttachmentPath);
+  if (ok.length) await del(ok, { token: BLOB_TOKEN() });
   revalidatePath(path);
 }
